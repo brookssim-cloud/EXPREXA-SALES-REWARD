@@ -1,0 +1,2344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>EXPREXA SALES &amp; REWARD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Same tokens as EXPREXA ATTENDANCE — the two apps sit side by side on the
+     same phones, so they have to look like one system, not two products. */
+  :root{
+    --ink:#14213D;
+    --ink-2:#1D2E52;
+    --paper:#EEF1F6;
+    --card:#FFFFFF;
+    --amber:#F2A93B;
+    --amber-dark:#C97F12;
+    --green:#1F9D6B;
+    --red:#D64545;
+    --blue:#2F5C8A;
+    --blue-soft:#EAF1F8;
+    --text:#1B2333;
+    --muted:#67708A;
+    --line:#DCE1EA;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .display{font-family:'Space Grotesk',sans-serif;}
+
+  .app{max-width:640px;margin:0 auto;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;}
+  /* The whole admin shell — navy header, tab bar and content — sits in one
+     column, so the header ends where the tables end rather than running on. */
+  .app.wide{max-width:980px;}
+  .narrow{display:flex;flex-direction:column;gap:14px;}
+  .hid{display:none !important;}
+  .cardhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:2px;}
+  .cardhead h3{margin:0;}
+  .chip.c-season{background:#EEF2FB;color:#3B4A6B;border:1px solid #D7DFEF;font-weight:600;}
+  /* A card that deletes things should not look like the ones that save them. */
+  .card.danger{border-color:#F2C9C9;background:#FFFBFB;}
+  .btn-danger-solid{background:var(--red);color:#fff;border:1px solid var(--red);width:100%;}
+  .btn-danger-solid:disabled{background:#E8A9A9;border-color:#E8A9A9;cursor:not-allowed;}
+  /* Search and sale-type sit on one line on a desktop and stack on a phone. */
+  .filters{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;}
+  .filters .field{margin:0;flex:1 1 230px;min-width:0;}
+  .filters .count{flex:0 0 auto;font-size:11.5px;color:var(--muted);padding-bottom:14px;}
+  .nb{white-space:nowrap;}
+  .topbar{background:var(--ink);color:#fff;padding:16px 18px 14px;position:relative;}
+  .brand{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .brand .name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:17px;letter-spacing:.02em;}
+  .brand .tag{border:1px solid var(--amber);color:var(--amber);font-size:10px;font-weight:700;letter-spacing:.06em;
+    text-transform:uppercase;padding:3px 9px;border-radius:6px;}
+  .topbar .sub{font-size:12.5px;color:#AEB8CC;margin-top:4px;}
+  .topbar .out{position:absolute;right:16px;top:16px;background:transparent;border:1px solid #38466A;color:#C3CBDD;
+    font-size:11px;font-weight:600;padding:5px 10px;border-radius:7px;cursor:pointer;}
+
+  .tabs{display:flex;gap:2px;overflow-x:auto;background:var(--ink);padding:0 10px;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#AEB8CC;font-size:13.5px;
+    font-weight:600;padding:9px 13px;cursor:pointer;white-space:nowrap;font-family:inherit;}
+  .tab.active{color:#fff;border-bottom-color:var(--amber);}
+
+  .content{padding:16px;display:flex;flex-direction:column;gap:14px;flex:1;}
+  /* The bottom nav is sticky, so the last field needs room to clear it when
+     the form is scrolled all the way down. */
+  .has-nav .content{padding-bottom:76px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;}
+  .card h3{margin:0 0 12px;font-size:15.5px;font-family:'Space Grotesk',sans-serif;}
+  .muted{color:var(--muted);}
+  .sm{font-size:12.5px;}
+  .xs{font-size:11.5px;}
+
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+  .field label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+  .field input,.field select,.field textarea{height:46px;border:1px solid var(--line);border-radius:10px;padding:0 13px;
+    font-size:15px;font-family:inherit;color:var(--text);background:#fff;width:100%;}
+  .field textarea{height:auto;min-height:76px;padding:11px 13px;resize:vertical;}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--ink);}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:-2px;}
+
+  .btn{border:none;border-radius:10px;font-family:inherit;font-weight:700;cursor:pointer;font-size:13.5px;padding:0 16px;height:46px;}
+  .btn:disabled{opacity:.55;cursor:default;}
+  .btn-primary{background:var(--ink);color:#fff;width:100%;letter-spacing:.03em;text-transform:uppercase;}
+  .btn-gold{background:var(--amber);color:var(--ink);letter-spacing:.03em;text-transform:uppercase;}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--muted);}
+  .btn-danger{background:#fff;border:1px solid #F0CDD0;color:var(--red);}
+  .btn-sm{height:36px;font-size:12px;padding:0 13px;}
+
+  .stats{display:flex;gap:10px;flex-wrap:wrap;}
+  .stat{flex:1 1 140px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;}
+  .stat .n{font-size:24px;font-weight:800;font-family:'Space Grotesk',sans-serif;}
+  .stat .l{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-top:3px;}
+
+  .balance{background:var(--ink);border-radius:var(--radius);padding:20px;color:#fff;}
+  .balance .big{font-size:33px;font-weight:800;font-family:'Space Grotesk',sans-serif;line-height:1.1;}
+  .balance .rm{font-size:15px;font-weight:700;color:var(--amber);margin-top:3px;}
+  .split{display:flex;gap:8px;margin-top:14px;}
+  .split > div{flex:1;background:var(--ink-2);border-radius:9px;padding:9px 11px;}
+  .split .k{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#8E9AB5;}
+  .split .v{font-size:16px;font-weight:800;margin-top:2px;}
+
+  .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #EEF1F5;}
+  .row:last-child{border-bottom:none;}
+  .chip{font-size:10px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:4px 9px;border-radius:6px;white-space:nowrap;}
+  .c-pool{background:#E6F5EE;color:var(--green);}
+  .c-hold{background:#FDF2DF;color:var(--amber-dark);}
+  .c-pend{background:#EDEFF3;color:var(--muted);}
+  .c-rej{background:#FBEAEA;color:var(--red);}
+  .c-ref{background:var(--blue-soft);color:var(--blue);}
+  .c-paid{background:#EDEFF3;color:var(--muted);}
+
+  .banner{border-radius:10px;padding:10px 13px;font-size:12.5px;line-height:1.45;display:flex;gap:9px;align-items:flex-start;}
+  .b-gold{background:#FDF2DF;border:1px solid #F3DCA9;color:#7A5410;}
+  .b-green{background:#E6F5EE;border:1px solid #BCE3D1;color:#146848;}
+  .b-blue{background:var(--blue-soft);border:1px solid #C4D8EA;color:#244A6E;}
+  .b-grey{background:#F4F6F9;border:1px solid var(--line);color:var(--muted);}
+  .b-red{background:#FBEAEA;border:1px solid #F0CDD0;color:var(--red);}
+
+  .bar{height:8px;background:#E8EBF0;border-radius:999px;overflow:hidden;}
+  .bar > i{display:block;height:100%;background:var(--amber);}
+  .bar.dark{background:#2A3A5C;}
+
+  .drop{border:1.5px dashed #C3CBDA;border-radius:10px;padding:18px;text-align:center;color:var(--muted);
+    font-size:13px;cursor:pointer;background:#fff;}
+  .drop.has{border-style:solid;border-color:var(--green);color:var(--green);background:#F5FBF8;}
+
+  .list{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:2px 14px;}
+  .empty{text-align:center;color:var(--muted);font-size:13px;padding:26px 10px;}
+
+  .nav{position:sticky;bottom:0;display:flex;background:#fff;border-top:1px solid var(--line);}
+  .nav button{flex:1;background:none;border:none;padding:9px 0 11px;font-family:inherit;font-size:10.5px;font-weight:600;
+    color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;}
+  .nav button.on{color:var(--amber-dark);}
+
+  .tgrid{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;}
+  /* Grid and flex children refuse to shrink past their content by default,
+     which is what pushed the reward rows wider than the phone. */
+  .tgrid > *{min-width:0;}
+  .field{min-width:0;}
+
+  table.t{width:100%;border-collapse:collapse;font-size:13px;}
+  table.t th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+    padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap;}
+  table.t td{padding:11px 8px;border-bottom:1px solid #EEF1F5;vertical-align:top;}
+  table.t tr:last-child td{border-bottom:none;}
+  .wrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:var(--radius);}
+  /* The three stages of a sale, shown as a track so it is obvious at a glance
+     how far along it is and what is still missing. */
+  .steps{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:10px;}
+  .step{font-size:10.5px;font-weight:700;letter-spacing:.02em;padding:3px 8px;border-radius:999px;
+    background:#EDEFF3;color:var(--muted);white-space:nowrap;}
+  .step.on{background:#E6F5EE;color:var(--green);}
+  .steparrow{color:#C3CBDA;font-size:12px;}
+
+  .invform{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
+  .invform .field{margin-bottom:10px;}
+
+  .doclist{display:flex;flex-direction:column;align-items:flex-start;}
+  .doclink{display:block;font-size:12px;font-weight:600;color:var(--ink);text-decoration:underline;margin-bottom:2px;}
+  .doclink.off{color:#AEB5C2;text-decoration:none;font-weight:500;}
+  .doclink.off::before{content:'— ';}
+
+  .tagline{display:inline-block;font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;margin-top:3px;white-space:nowrap;}
+  .t-boost{background:#FDF2DF;color:var(--amber-dark);border:1px solid #F3DCA9;}
+  .t-ref{background:var(--blue-soft);color:var(--blue);border:1px solid #C4D8EA;}
+
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;background:var(--ink);color:#fff;
+    padding:12px 18px;border-radius:10px;font-size:13.5px;z-index:99;box-shadow:0 6px 24px rgba(20,33,61,.3);max-width:88%;}
+
+  /* ===== Admin on a phone =====
+     The admin screens get used on a handset, same as the attendance app's.
+     A table left to scroll sideways hides the Approve button off the right
+     edge, so below this width every row becomes its own card with the column
+     name printed beside each value. Labels come from the header row at
+     render time rather than being written into every cell by hand. */
+  @media (max-width: 760px){
+    .wrap{overflow-x:visible;border:none;background:transparent;border-radius:0;}
+    table.t, table.t tbody, table.t tr, table.t td{display:block;width:100%;}
+    table.t tr:first-child{display:none;}
+    table.t tr{background:var(--card);border:1px solid var(--line);border-radius:12px;
+      margin-bottom:10px;padding:13px 14px;}
+    table.t td{border:none;padding:4px 0;display:flex;gap:10px;align-items:baseline;}
+    table.t td:empty{display:none;}
+    table.t td[data-l]::before{content:attr(data-l);flex:0 0 92px;font-size:10px;font-weight:700;
+      text-transform:uppercase;letter-spacing:.04em;color:var(--muted);line-height:1.6;}
+    table.t td > *{min-width:0;}
+    /* A cell's second line (sale type, pickup number) belongs under its main
+       text, not beside it — the label column is 92px plus the 10px gap. */
+    table.t td[data-l]{flex-wrap:wrap;}
+    table.t td[data-l] > .xs.muted{flex:1 0 calc(100% - 102px);margin-left:102px;}
+    /* The action cell reads as a pair of full-width buttons rather than two
+       small ones crowded against the right edge. */
+    table.t td:last-child:not([data-l]){display:flex;gap:8px;margin-top:8px;}
+    table.t td:last-child:not([data-l]) .btn{flex:1 1 0;}
+  }
+
+  /* ===== Sign-in, built the same way as Exprexa Performance's worker portal:
+     one screen, a name you search for rather than a list of everyone, and the
+     option to stay signed in on your own phone. ===== */
+  .worker-shell{max-width:440px; margin:0 auto; min-height:100vh; min-height:100dvh; display:flex; flex-direction:column;}
+  .worker-hero{background:var(--ink); color:#fff; padding:30px 22px 22px; position:relative; overflow:hidden; flex-shrink:0;}
+  .worker-hero::after{content:""; position:absolute; left:0; right:0; bottom:0; height:6px;
+    background:repeating-linear-gradient(-45deg, var(--amber) 0 10px, var(--ink-2) 10px 20px);}
+  .worker-hero .co{font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px;}
+  .worker-hero .sub{font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--amber); margin-top:4px;}
+  .worker-hero .admin-in{position:absolute; top:16px; right:14px; z-index:2;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.04em;
+    color:rgba(255,255,255,.62); text-decoration:none; padding:7px 12px;
+    border:1px solid rgba(255,255,255,.22); border-radius:8px; -webkit-tap-highlight-color:transparent;}
+  .worker-hero .admin-in:active{color:#fff; border-color:rgba(255,255,255,.5);}
+  .worker-body{flex:1; padding:22px 18px 40px;}
+  /* A single password field pinned under the header reads as a form that only
+     half loaded. It drops a little way down the screen instead — bounded, so
+     it never drifts into the middle of a tall monitor or under a phone's
+     keyboard. */
+  .worker-body.signin{padding-top:clamp(20px, 9vh, 90px);}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--amber-dark); margin-bottom:6px;}
+
+  /* Performance's field proportions, scoped to this screen so the rest of
+     the app keeps the attendance app's. */
+  .worker-body .field{margin-bottom:14px;}
+  .worker-body .field label{display:block; font-size:12px; font-weight:600; color:var(--muted);
+    margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;}
+  .worker-body .field input{width:100%; height:auto; padding:10px 12px; border:1.5px solid var(--line);
+    border-radius:8px; font-size:14.5px;}
+
+  .namehit{background:var(--card); border:1.5px solid var(--line); border-radius:10px;
+    padding:11px 13px; margin-top:8px; cursor:pointer; text-align:left;}
+  .namehit:active{transform:scale(0.99);}
+  .namehit .nm{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:14.5px; color:var(--text);}
+  .namehit .rl{font-size:11.5px; color:var(--muted); margin-top:1px;}
+  .btn-block{width:100%;}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+(function(){
+  'use strict';
+
+  // ===================================================================
+  // EXPREXA SALES & REWARD
+  //
+  // Runs on the SAME Firebase project as EXPREXA ATTENDANCE (dispatch-clock)
+  // on purpose: the worker roster, their passwords and the admin password
+  // already live there. Duplicating them into a second project would mean two
+  // lists drifting apart and workers remembering two passwords.
+  //
+  // Everything this app owns is prefixed epx_sales_ so it sits beside the
+  // attendance collections without ever colliding with them.
+  // ===================================================================
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCDzNm4W1D9NVp9l60JEiZOSCaCQNnyr3c",
+    authDomain: "dispatch-clock.firebaseapp.com",
+    projectId: "dispatch-clock",
+    storageBucket: "dispatch-clock.firebasestorage.app",
+    messagingSenderId: "562921093074",
+    appId: "1:562921093074:web:efe0e6393a83014c3d3a0b"
+  };
+  let db = null;
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+  }catch(e){ console.error('Firebase init failed:', e); }
+
+  // ---------- Rules of the scheme ----------
+  const POINTS_PER_RM   = 1;      // RM1 of billing value = 1 point
+  const RM_PER_POINT    = 0.01;   // 1 point = RM0.01  →  a flat 1% commission
+  // A sale is built up in three stages, each proved by a document. Points are
+  // projected from the first stage so the worker can see what a sale is worth
+  // straight away, but nothing is awarded until every stage is in and admin has
+  // approved the set. Proof of delivery is what releases the money, which is
+  // why there is no longer a 30-day hold: a signed POD is better evidence that
+  // a sale stuck than a wait ever was.
+  // Every stage a sale can pass through. Which of them apply depends on the
+  // sale type, so they are defined once and assembled into flows below.
+  //
+  // `details` names the figures keyed in alongside that stage's document.
+  // They are saved together, so a value can never be recorded without the
+  // evidence behind it.
+  const STAGE = {
+    order:    { id:'order',    label:'Order',     doc:'Pickup form',       verb:'Upload pickup form' },
+    invoice:  { id:'invoice',  label:'Invoice',   doc:'Invoice',           verb:'Add invoice',
+                details:['invoiceNo','billingValue'] },
+    payment:  { id:'payment',  label:'Payment',   doc:'Payment slip',      verb:'Upload payment slip' },
+    whatsapp: { id:'whatsapp', label:'WhatsApp',  doc:'WhatsApp proof',    verb:'Add WhatsApp proof',
+                details:['billingValue'] },
+    pod:      { id:'pod',      label:'Delivered', doc:'Proof of delivery', verb:'Upload proof of delivery' }
+  };
+
+  // An upsell to a client already on the books needs no fresh invoice or
+  // payment trail — the WhatsApp message agreeing the job is the evidence,
+  // and the value is keyed in with it.
+  const FLOWS = {
+    upsell:  [STAGE.order, STAGE.whatsapp, STAGE.pod],
+    default: [STAGE.order, STAGE.invoice, STAGE.payment, STAGE.pod]
+  };
+  const stagesFor = sub => FLOWS[(sub && sub.saleType) === 'upsell' ? 'upsell' : 'default'];
+  const stageDef  = id => STAGE[id] || null;
+
+  // Which stage a submission is waiting on, or null once everything is in.
+  function nextStage(sub){
+    for(const s of stagesFor(sub)){ if(!(sub.docs && sub.docs[s.id])) return s; }
+    return null;
+  }
+  // A sale is ready for review only when every document is in AND the invoice
+  // figures have been keyed. A document alone does not make it reviewable:
+  // without the value there is nothing to award.
+  const hasValue = sub => Number(sub.billingValue) > 0;
+  const isComplete = sub => !nextStage(sub) && hasValue(sub);
+
+  const ACCEPT = 'application/pdf,image/*';
+  const OK_TYPES = /^(application\/pdf|image\/(jpeg|png|webp|heic|heif))$/i;
+  // Returns why a file cannot be used, or null if it is fine.
+  function fileProblem(file){
+    if(!OK_TYPES.test(file.type || '')) return 'That has to be a PDF or a photo.';
+    if(file.size > MAX_FILE_BYTES){
+      return 'That file is ' + Math.round(file.size/1024) + ' KB — the limit is '
+        + sizeLimitLabel() + '. Compress it and try again.';
+    }
+    return null;
+  }
+
+  // ---------- Where invoice PDFs go ----------
+  // Paste the Apps Script web app /exec URL here (see Code.gs). With it set,
+  // invoices are written straight into your own Drive folder and only the
+  // link is kept — no invoice is stored in Firestore at all.
+  //
+  // Left blank, the app falls back to holding the file in Firestore, which
+  // still works but is capped at 700 KB by the 1 MB document limit.
+  const DRIVE_ENDPOINT  = 'https://script.google.com/macros/s/AKfycbyu4-8oc5T1u5Xvx75G1b24QT9AXOBukBF5oGcY8LcAmSCbx2ytTRbP88J1N2EN-ffV/exec';
+  const DRIVE_ON        = /^https:\/\/script\.google\.com\//.test(DRIVE_ENDPOINT);
+  const MAX_FILE_BYTES  = DRIVE_ON ? 10*1024*1024 : 700*1024;
+  const sizeLimitLabel  = () => MAX_FILE_BYTES >= 1024*1024
+    ? (MAX_FILE_BYTES/1024/1024) + ' MB' : (MAX_FILE_BYTES/1024) + ' KB';
+
+  const SALE_TYPES = [
+    { id:'new_client', label:'New client signed' },
+    { id:'upsell',     label:'Upsell / new lane, existing client' },
+    { id:'referral',   label:'Lead referral' }
+  ];
+  const saleTypeLabel = id => (SALE_TYPES.find(t=>t.id===id)||{}).label || id || '—';
+
+  // ---------- Small helpers ----------
+  function uid(){ return 'e' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+  function todayStr(){
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function fmtDate(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if(isNaN(d)) return '—';
+    return d.getDate() + ' ' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()] + ' ' + d.getFullYear();
+  }
+  function addDays(iso, n){
+    const d = new Date(iso);
+    d.setDate(d.getDate() + n);
+    return d.toISOString();
+  }
+  function daysLeft(iso){
+    const ms = new Date(iso).getTime() - Date.now();
+    return ms <= 0 ? 0 : Math.ceil(ms / 86400000);
+  }
+  function pts(n){ return Number(n||0).toLocaleString('en-MY'); }
+  function rm(n){ return Number(n||0).toLocaleString('en-MY',{minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function esc(s){
+    return String(s==null?'':s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  async function sha256Hex(str){
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+  function toast(msg){
+    const el = document.createElement('div');
+    el.className = 'toast'; el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 2800);
+  }
+  const $ = id => document.getElementById(id);
+
+  // ===================================================================
+  // Data layer
+  // ===================================================================
+
+  // Workers come from the attendance app untouched — this app never creates,
+  // edits or deletes one.
+  //
+  // Everyone is loaded, resigned included: someone who leaves mid-season can
+  // still have points sitting in the pool that are owed to them, and their
+  // name has to keep resolving on old records. Only the places where a LIVE
+  // choice is made — the login list and the referrer picker — filter them out.
+  let _workers = null;
+  async function getWorkers(){
+    if(_workers) return _workers;
+    if(!db) return [];
+    try{
+      const snap = await db.collection('epx_workers').get();
+      _workers = snap.docs.map(d=>d.data());
+      _workers.sort((a,b)=> String(a.name||'').localeCompare(String(b.name||'')));
+      return _workers;
+    }catch(e){ console.error('getWorkers failed:', e); return []; }
+  }
+  const activeOnly = list => (list||[]).filter(w=>!w.resigned);
+  const workerName = (list,id) => (list.find(w=>w.id===id)||{}).name || 'Unknown';
+
+  // Job role names, so a search hit can show the role underneath the name the
+  // way Performance does. Same config document the attendance app writes.
+  let _roles = null;
+  async function getJobRoles(){
+    if(_roles) return _roles;
+    try{
+      const doc = await db.collection('epx_config').doc('roster_roles').get();
+      const list = doc.exists ? (doc.data().value || []) : [];
+      _roles = {};
+      list.forEach(r=>{
+        if(r && typeof r === 'object' && r.id) _roles[r.id] = r.name || r.title || '';
+      });
+      return _roles;
+    }catch(e){ console.error('getJobRoles failed:', e); _roles = {}; return _roles; }
+  }
+
+  // Staying signed in. Only the worker id is kept — it is not a credential:
+  // the password is checked here in the page, so what this remembers is the
+  // decision to skip that check on this device, not a secret.
+  const WSESSION_KEY = 'sales_worker_session';
+  function readWorkerSession(){
+    try{ return localStorage.getItem(WSESSION_KEY) || sessionStorage.getItem(WSESSION_KEY) || ''; }
+    catch(e){ return ''; }
+  }
+  function saveWorkerSession(id, keep){
+    try{
+      if(keep){ localStorage.setItem(WSESSION_KEY, id); sessionStorage.removeItem(WSESSION_KEY); }
+      else { sessionStorage.setItem(WSESSION_KEY, id); localStorage.removeItem(WSESSION_KEY); }
+    }catch(e){
+      // Private browsing refuses storage. Signing in still works; it just
+      // does not outlast the tab.
+      try{ sessionStorage.setItem(WSESSION_KEY, id); }catch(e2){}
+    }
+  }
+  function clearWorkerSession(){
+    try{ localStorage.removeItem(WSESSION_KEY); }catch(e){}
+    try{ sessionStorage.removeItem(WSESSION_KEY); }catch(e){}
+  }
+
+  // The admin password is the attendance app's — one password, both apps.
+  async function getAdminHash(){
+    try{
+      const doc = await db.collection('epx_config').doc('main').get();
+      return doc.exists ? (doc.data().adminPasswordHash || null) : null;
+    }catch(e){ console.error('getAdminHash failed:', e); return null; }
+  }
+
+  // ---------- Customers ----------
+  // Admin keeps the list of existing clients. An upsell has to be attributed
+  // to one of them rather than typed freehand, so the same client cannot end
+  // up in the data three times under three spellings.
+  //
+  // Removing a customer archives them: a sale recorded against that name last
+  // month must keep reading correctly, so nothing is ever really deleted.
+  let _customers = null;
+  async function getCustomers(){
+    if(_customers) return _customers;
+    if(!db) return [];
+    try{
+      const snap = await db.collection('epx_sales_customers').get();
+      _customers = snap.docs.map(d=>d.data())
+        .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||'')));
+      return _customers;
+    }catch(e){ console.error('getCustomers failed:', e); return []; }
+  }
+  const liveCustomers = list => (list||[]).filter(c => !c.archived);
+  async function saveCustomer(c){
+    try{
+      await db.collection('epx_sales_customers').doc(c.id).set(c);
+      _customers = null;
+      return true;
+    }catch(e){ console.error('saveCustomer failed:', e); return false; }
+  }
+
+  // Scheme settings: season window, bonus tiers, SPIFF boosts.
+  const DEFAULT_SETTINGS = { seasonStart:'', seasonEnd:'', tiers:[], spiffs:[] };
+  let _settings = null;
+  async function getSettings(){
+    if(_settings) return _settings;
+    if(!db) return { ...DEFAULT_SETTINGS };
+    try{
+      const doc = await db.collection('epx_sales_config').doc('main').get();
+      _settings = doc.exists ? { ...DEFAULT_SETTINGS, ...doc.data() } : { ...DEFAULT_SETTINGS };
+      return _settings;
+    }catch(e){ console.error('getSettings failed:', e); return { ...DEFAULT_SETTINGS }; }
+  }
+  async function saveSettings(s){
+    try{
+      await db.collection('epx_sales_config').doc('main').set(s);
+      _settings = s;
+      return true;
+    }catch(e){ console.error('saveSettings failed:', e); return false; }
+  }
+
+  // Submissions. Sorted in JS rather than with orderBy so no composite index
+  // has to exist before the app will run.
+  async function getSubmissions(){
+    if(!db) return [];
+    try{
+      const snap = await db.collection('epx_sales_submissions').get();
+      return snap.docs.map(d=>d.data())
+        .sort((a,b)=> String(b.submittedAt||'').localeCompare(String(a.submittedAt||'')));
+    }catch(e){ console.error('getSubmissions failed:', e); return []; }
+  }
+  async function getSubmissionsFor(workerId){
+    if(!db) return [];
+    try{
+      const snap = await db.collection('epx_sales_submissions').where('workerId','==',workerId).get();
+      return snap.docs.map(d=>d.data())
+        .sort((a,b)=> String(b.submittedAt||'').localeCompare(String(a.submittedAt||'')));
+    }catch(e){ console.error('getSubmissionsFor failed:', e); return []; }
+  }
+  async function saveSubmission(s){
+    try{ await db.collection('epx_sales_submissions').doc(s.id).set(s); return true; }
+    catch(e){ console.error('saveSubmission failed:', e); return false; }
+  }
+
+  // Sends one document to the Drive folder and hands back its link.
+  //
+  // The body goes as text/plain on purpose. Apps Script cannot answer a CORS
+  // preflight, and anything the browser treats as a non-simple request — a
+  // JSON content type included — triggers one and fails before it arrives.
+  async function uploadToDrive(dataUrl, mime, meta){
+    const res = await fetch(DRIVE_ENDPOINT, {
+      method:'POST',
+      headers:{ 'Content-Type':'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        data: String(dataUrl).split(',')[1] || '',
+        mime: mime || 'application/pdf',
+        ...meta
+      })
+    });
+    if(!res.ok) throw new Error('Upload failed (' + res.status + ')');
+    const out = await res.json();
+    if(!out.ok) throw new Error(out.error || 'Upload rejected');
+    return out;
+  }
+
+  // Fallback when no Drive endpoint is configured: the file is kept in its own
+  // collection, the same trick the attendance app uses for IC photos, so that
+  // listing submissions never drags the files down with it. One document per
+  // stage, so the key carries the stage as well as the submission.
+  const fileKey = (subId, stage) => subId + '__' + stage;
+  async function saveFileDoc(subId, stage, dataUrl, filename, mime){
+    try{
+      await db.collection('epx_sales_files').doc(fileKey(subId, stage))
+        .set({ dataUrl, filename, mime, stage, submissionId:subId });
+      return true;
+    }catch(e){ console.error('saveFileDoc failed:', e); return false; }
+  }
+  async function getFileDoc(subId, stage){
+    try{
+      const doc = await db.collection('epx_sales_files').doc(fileKey(subId, stage)).get();
+      return doc.exists ? doc.data() : null;
+    }catch(e){ console.error('getFileDoc failed:', e); return null; }
+  }
+
+  // Files one stage's document and records it on the submission. Used both by
+  // the first submission and by each later stage, so there is one path that
+  // can put a document somewhere — not two that must be kept in step.
+  async function attachDoc(sub, stage, file){
+    const dataUrl = await new Promise((resolve, reject)=>{
+      const r = new FileReader();
+      r.onload = () => resolve(r.result);
+      r.onerror = () => reject(new Error('Could not read that file.'));
+      r.readAsDataURL(file);
+    });
+    const def = stageDef(stage);
+    const entry = { name:file.name, mime:file.type, at:new Date().toISOString() };
+
+    if(DRIVE_ON){
+      const up = await uploadToDrive(dataUrl, file.type, {
+        name: file.name, date: sub.date,
+        // At the order stage there is no invoice number yet, so the pickup
+        // form number stands in — the file still has to be identifiable in
+        // Drive without opening the app.
+        invoiceNo: sub.invoiceNo || sub.pickupNo || '',
+        billingName: sub.billingName || '',
+        workerName: sub.workerName, submissionId: sub.id, stage: def.doc
+      });
+      entry.url = up.url;
+      entry.id = up.id;
+    } else {
+      if(!await saveFileDoc(sub.id, stage, dataUrl, file.name, file.type)){
+        throw new Error('Could not store the file.');
+      }
+    }
+    return entry;
+  }
+
+  // ---------- Awards ----------
+  // One document per point award, NOT per submission. A referred sale makes
+  // two of them — kind 'own' and kind 'referral' — so the referrer's points
+  // need no special case anywhere downstream: they hold, pool and get paid
+  // through exactly the same code as the submitter's.
+  //
+  // There is no server here to run a nightly job, so nothing ever "moves"
+  // points out of hold. An award is simply pooled once its holdUntil has
+  // passed, worked out at read time. That makes the 30-day rule impossible
+  // to get wrong by missing a cron run.
+  async function getAwards(){
+    if(!db) return [];
+    try{
+      const snap = await db.collection('epx_sales_awards').get();
+      return snap.docs.map(d=>d.data());
+    }catch(e){ console.error('getAwards failed:', e); return []; }
+  }
+  async function getAwardsFor(workerId){
+    if(!db) return [];
+    try{
+      const snap = await db.collection('epx_sales_awards').where('workerId','==',workerId).get();
+      return snap.docs.map(d=>d.data());
+    }catch(e){ console.error('getAwardsFor failed:', e); return []; }
+  }
+  // Every approved award is in the pool straight away — there is no hold to
+  // wait out. What a worker can still redeem is simply everything they have
+  // earned, less everything they have already taken out.
+  const sumPts = list => list.reduce((t,a)=> t + Number(a.points||0), 0);
+
+  // ---------- Redemptions ----------
+  // The debit side of the ledger, modelled on Exprexa Performance: a worker
+  // exchanges points for a cash amount and the record of it is what reduces
+  // their balance. Nothing is ever subtracted from an award, so the history
+  // of what was earned stays intact however much has been taken out.
+  async function getRedemptions(){
+    if(!db) return [];
+    try{
+      const snap = await db.collection('epx_sales_redemptions').get();
+      return snap.docs.map(d=>d.data())
+        .sort((a,b)=> String(b.redeemedAt||'').localeCompare(String(a.redeemedAt||'')));
+    }catch(e){ console.error('getRedemptions failed:', e); return []; }
+  }
+  async function getRedemptionsFor(workerId){
+    if(!db) return [];
+    try{
+      const snap = await db.collection('epx_sales_redemptions').where('workerId','==',workerId).get();
+      return snap.docs.map(d=>d.data())
+        .sort((a,b)=> String(b.redeemedAt||'').localeCompare(String(a.redeemedAt||'')));
+    }catch(e){ console.error('getRedemptionsFor failed:', e); return []; }
+  }
+  async function saveRedemption(r){
+    try{ await db.collection('epx_sales_redemptions').doc(r.id).set(r); return true; }
+    catch(e){ console.error('saveRedemption failed:', e); return false; }
+  }
+
+  // A worker's balance, and the two halves it is made of.
+  function balanceOf(workerId, awards, redemptions){
+    const mine = awards.filter(a => a.workerId === workerId);
+    const earned = sumPts(mine);
+    const spent = redemptions.filter(r => r.workerId === workerId)
+      .reduce((t,r)=> t + Number(r.points||0), 0);
+    return {
+      earned, spent, balance: earned - spent,
+      own: sumPts(mine.filter(a=>a.kind === 'own')),
+      referral: sumPts(mine.filter(a=>a.kind === 'referral'))
+    };
+  }
+
+  // What a submission is worth, worked out from the boost live on its order
+  // date. Shown as a projection before approval and used as the real figure
+  // at approval, so the two can never disagree.
+  function projectedPoints(sub, settings){
+    const boost = spiffFor(settings, sub.saleType, sub.submittedAt);
+    const mult = boost ? Number(boost.multiplier) : 1;
+    const base = Math.round(Number(sub.billingValue||0) * POINTS_PER_RM);
+    // Before the value is in there is no figure to show. Callers check
+    // `known` rather than printing a confident 0.
+    return { base, mult, boost, points: Math.round(base * mult), known: hasValue(sub) };
+  }
+
+  // What to call a sale on screen.
+  const subTitle = s => s.billingName || 'Untitled job';
+
+  // ---------- SPIFF matching ----------
+  // Which boost applies to a sale type on a given day. Multiple boosts can be
+  // live at once; if two cover the same sale type the better one wins rather
+  // than whichever happens to be first in the list.
+  function spiffFor(settings, saleType, whenISO){
+    const when = (whenISO || new Date().toISOString()).slice(0,10);
+    let best = null;
+    (settings.spiffs||[]).forEach(s=>{
+      if(s.saleType !== saleType) return;
+      if(s.start && when < s.start) return;
+      if(s.end   && when > s.end)   return;
+      const m = Number(s.multiplier);
+      if(!isFinite(m) || m <= 0) return;
+      if(!best || m > Number(best.multiplier)) best = s;
+    });
+    return best;
+  }
+
+  // ---------- Approving ----------
+  // Writing the submission and both awards together means a half-approved
+  // sale cannot exist: either the points are owed to everyone they are owed
+  // to, or the approval did not happen.
+  async function approveSubmission(sub, settings){
+    const now = new Date().toISOString();
+    // No hold: proof of delivery has already been seen, so the points are
+    // pooled the moment they are awarded. The field stays so that an award
+    // still answers "is this cashable yet" the same way everywhere.
+    const holdUntil = now;
+    // The boost is the one that was live when the order was placed, not when
+    // the paperwork finally caught up. A sale made during a 2× month keeps
+    // 2× even if delivery lands after the boost has ended — otherwise the
+    // reward would depend on how fast a client pays.
+    const boost = spiffFor(settings, sub.saleType, sub.submittedAt || now);
+    const mult = boost ? Number(boost.multiplier) : 1;
+    const base = Math.round(Number(sub.billingValue||0) * POINTS_PER_RM);
+    const points = Math.round(base * mult);
+
+    const batch = db.batch();
+    const subRef = db.collection('epx_sales_submissions').doc(sub.id);
+    batch.set(subRef, {
+      ...sub,
+      status:'approved', approvedAt:now, holdUntil,
+      basePoints:base, multiplier:mult, awardedPoints:points,
+      spiffLabel: boost ? (mult + '× ' + saleTypeLabel(sub.saleType)) : null,
+      rejectReason:null
+    });
+
+    const mkAward = (workerId, kind) => {
+      const id = uid();
+      batch.set(db.collection('epx_sales_awards').doc(id), {
+        id, submissionId:sub.id, workerId, kind,
+        points, approvedAt:now, holdUntil, state:'held',
+        payoutId:null, paidAt:null,
+        billingName:sub.billingName, invoiceNo:sub.invoiceNo, saleType:sub.saleType
+      });
+    };
+    mkAward(sub.workerId, 'own');
+    if(sub.referrerId) mkAward(sub.referrerId, 'referral');
+
+    await batch.commit();
+    return { points, mult, boost };
+  }
+
+  async function rejectSubmission(sub, reason){
+    try{
+      await db.collection('epx_sales_submissions').doc(sub.id).set({
+        ...sub, status:'rejected', rejectReason:reason, rejectedAt:new Date().toISOString()
+      });
+      return true;
+    }catch(e){ console.error('rejectSubmission failed:', e); return false; }
+  }
+
+  // ---------- Recording a redemption ----------
+  // Guarded against spending more than is there: two admins on two phones
+  // could otherwise each see the same balance and each approve against it.
+  async function recordRedemption({ workerId, workerName, label, points, amount, note, kind, seasonKey }){
+    const [awards, reds] = await Promise.all([getAwards(), getRedemptions()]);
+    if(kind === 'bonus'){
+      // A season bonus is paid once. Re-read rather than trust the screen:
+      // two admins could be looking at the same list.
+      if(reds.some(r => r.kind === 'bonus' && r.workerId === workerId && r.seasonKey === seasonKey)){
+        throw new Error('That bonus has already been paid for this season.');
+      }
+    } else {
+      const bal = balanceOf(workerId, awards, reds).balance;
+      if(points > bal) throw new Error('Only ' + pts(bal) + ' pts available.');
+    }
+    const id = uid();
+    const ok = await saveRedemption({
+      id, workerId, workerName, label,
+      points: points || 0, amount,
+      kind: kind || 'points', seasonKey: seasonKey || null,
+      note: note || null, redeemedAt: new Date().toISOString()
+    });
+    if(!ok) throw new Error('Could not record it.');
+    return id;
+  }
+
+  // ---------- Season cash bonus ----------
+  // A bonus is RM on top of the points, not points themselves — so paying one
+  // never touches a balance. It is earned by reaching a tier within the
+  // season window and paid once, at the highest tier reached.
+  const seasonKeyOf = s => (s.seasonStart||'') + '..' + (s.seasonEnd||'');
+  const seasonLabel = s => (s && s.seasonStart && s.seasonEnd)
+    ? fmtDate(s.seasonStart) + ' – ' + fmtDate(s.seasonEnd)
+    : 'no season window set';
+  function seasonPointsFor(workerId, awards, settings){
+    return sumPts(awards.filter(a => a.workerId === workerId
+      && (!settings.seasonStart || a.approvedAt >= settings.seasonStart)
+      && (!settings.seasonEnd   || a.approvedAt <= settings.seasonEnd + 'T23:59:59')));
+  }
+  function tierReached(points, settings){
+    return (settings.tiers||[]).slice()
+      .sort((a,b)=> Number(a.threshold) - Number(b.threshold))
+      .filter(t => points >= Number(t.threshold)).pop() || null;
+  }
+  // Everyone who has earned a bonus this season, and whether it is still owed.
+  function bonusesDue(workers, awards, redemptions, settings){
+    const key = seasonKeyOf(settings);
+    return activeOnly(workers).map(w => {
+      const sp = seasonPointsFor(w.id, awards, settings);
+      const tier = tierReached(sp, settings);
+      if(!tier) return null;
+      const paid = redemptions.find(r => r.kind === 'bonus'
+        && r.workerId === w.id && r.seasonKey === key);
+      return { w, seasonPoints: sp, tier, paid: paid || null, key };
+    }).filter(Boolean).sort((a,b)=> b.seasonPoints - a.seasonPoints);
+  }
+
+  // ===================================================================
+  // Screens
+  // ===================================================================
+  const root = $('root');
+  let WORKER = null;   // logged-in worker, or null
+
+  function shell(title, sub, body, opts){
+    opts = opts || {};
+    return `
+      <div class="app${opts.wide?' wide':''}${opts.nav?' has-nav':''}">
+        <div class="topbar">
+          <div class="brand"><span class="name">EXPREXA SALES</span><span class="tag">${esc(opts.tag||'Reward')}</span></div>
+          <div class="sub">${esc(sub||'')}</div>
+          ${opts.logout ? '<button class="out" id="logout">Log out</button>' : ''}
+        </div>
+        ${opts.tabs||''}
+        <div class="content">${body}</div>
+        ${opts.nav||''}
+      </div>`;
+  }
+
+  // ---------- Entry ----------
+  async function start(){
+    if(!db){
+      root.innerHTML = shell('','', '<div class="banner b-red">Could not reach the database. Check the connection and reload.</div>');
+      return;
+    }
+    const hash = location.hash.replace(/^#/,'');
+    if(hash === 'admin') return renderAdminGate();
+    return renderLogin();
+  }
+
+  // Opening the address fresh always lands on the worker portal, whatever the
+  // link happened to carry. #admin sticks in the bar the moment anyone visits
+  // it, so a link copied from an admin's browser and passed round the team
+  // would otherwise open everyone on the admin screen. Admin is one tap away
+  // from here — and an admin already signed in on this tab stays put across a
+  // reload rather than being thrown out to the worker side.
+  function boot(){
+    const onAdmin = location.hash.replace(/^#/,'') === 'admin';
+    const unlocked = sessionStorage.getItem('epx_admin_unlocked') === '1';
+    if(onAdmin && !unlocked){
+      dropHash();
+      return renderLogin();   // decided here, not inferred from the address
+    }
+    start();
+  }
+
+  // Tidying the address is a nicety, not the thing that routes: opened from a
+  // file:// path or inside some embedded browsers this throws, and the app
+  // must still come up rather than going blank.
+  function dropHash(){
+    try{ history.replaceState(null, '', location.pathname + location.search); }
+    catch(e){ /* address stays as it was; routing has already been decided */ }
+  }
+
+  window.addEventListener('hashchange', ()=>{
+    WORKER = null;
+    start();
+  });
+
+  // ---------- Worker login ----------
+  // Same name-and-password pair as the attendance app, checked against the
+  // same epx_workers record. Nothing new for anyone to remember.
+  async function renderLogin(){
+    root.innerHTML = `
+      <div class="worker-shell">
+        <div class="worker-hero">
+          <div class="co">Exprexa Sales &amp; Reward</div>
+          <div class="sub">Worker Portal</div>
+          <a class="admin-in" href="#admin">Admin</a>
+        </div>
+        <div class="worker-body" id="wp-body"><div class="empty">Loading…</div></div>
+      </div>`;
+    const body = $('wp-body');
+
+    const all = await getWorkers();
+    const workers = activeOnly(all);
+    const roles = await getJobRoles();
+
+    if(!workers.length){
+      body.innerHTML = `<div class="empty">No team set up yet. Workers are added in the attendance app.</div>`;
+      return;
+    }
+
+    // A kept session. Dropped rather than honoured if that worker has since
+    // resigned, so someone who has left cannot walk back in on an old phone.
+    const remembered = readWorkerSession();
+    if(remembered){
+      const w = workers.find(x => x.id === remembered);
+      if(w){ WORKER = w; return renderSubmit(); }
+      clearWorkerSession();
+    }
+
+    body.innerHTML = `
+      <div class="eyebrow" style="margin-bottom:10px;">Sign in</div>
+      <div class="field"><label>Your name</label>
+        <input type="text" id="wp-name" placeholder="Search your name…" autocomplete="off">
+        <div id="wp-hits"></div>
+      </div>
+      <div class="field"><label>Your PIN / password</label>
+        <input type="password" id="wp-pass" inputmode="numeric" placeholder="••••"></div>
+      <label style="display:flex;align-items:center;gap:9px;font-size:12.5px;
+        color:var(--muted);margin:0 0 14px;cursor:pointer;line-height:1.5;">
+        <input type="checkbox" id="wp-keep" style="width:16px;height:16px;
+          accent-color:var(--ink);margin:0;flex:0 0 auto;">
+        Keep me signed in on this device
+      </label>
+      <button class="btn btn-primary btn-block" id="wp-login">Log In</button>
+      <div id="wp-msg" style="margin-top:9px;font-size:12.5px;"></div>
+      <div class="xs muted" style="margin-top:14px;line-height:1.5;">
+        Same PIN or password you use for the attendance app.
+      </div>`;
+
+    const nameInput = $('wp-name'), hits = $('wp-hits'), passInput = $('wp-pass'), msg = $('wp-msg');
+    let picked = null;
+
+    function choose(w){
+      picked = w;
+      nameInput.value = w.name;
+      nameInput.style.borderColor = 'var(--green)';
+      hits.innerHTML = '';
+      passInput.focus();
+    }
+    function showHits(query){
+      // Nothing typed, nothing listed. The full team is not a thing to browse
+      // on the way in.
+      const q = query.trim().toLowerCase();
+      picked = null;
+      nameInput.style.borderColor = '';
+      if(!q){ hits.innerHTML = ''; return; }
+      const matches = workers.filter(w => String(w.name||'').toLowerCase().includes(q)).slice(0,6);
+      hits.innerHTML = matches.length
+        ? matches.map(w=>{
+            const role = roles[w.jobRoleId] || '';
+            return `<div class="namehit" data-id="${esc(w.id)}">
+              <div class="nm">${esc(w.name)}</div>
+              ${role ? `<div class="rl">${esc(role)}</div>` : ''}
+            </div>`;
+          }).join('')
+        : `<div class="empty" style="padding:12px 0;">No matching names.</div>`;
+      hits.querySelectorAll('.namehit').forEach(el=>{
+        el.onclick = () => {
+          const w = workers.find(x => x.id === el.dataset.id);
+          if(w) choose(w);
+        };
+      });
+    }
+    nameInput.oninput = e => showHits(e.target.value);
+
+    const doLogin = async () => {
+      const btn = $('wp-login');
+      msg.style.color = 'var(--red)';
+      if(!picked){ msg.textContent = 'Please pick your name from the list.'; nameInput.focus(); return; }
+      if(!passInput.value){ msg.textContent = 'Please enter your PIN.'; passInput.focus(); return; }
+      btn.disabled = true; btn.textContent = 'Checking…';
+      msg.textContent = '';
+      const hash = await sha256Hex(passInput.value);
+      if(hash !== picked.passwordHash){
+        btn.disabled = false; btn.textContent = 'Log In';
+        // Which of the two was wrong is not said — a name that exists should
+        // not be confirmable by guessing.
+        msg.textContent = 'Incorrect name or PIN.';
+        return;
+      }
+      const keep = $('wp-keep');
+      saveWorkerSession(picked.id, !!(keep && keep.checked));
+      WORKER = picked;
+      renderSubmit();
+    };
+    $('wp-login').onclick = doLogin;
+    passInput.addEventListener('keydown', e => { if(e.key === 'Enter') doLogin(); });
+    nameInput.addEventListener('keydown', e => {
+      // Enter on the name box takes the single match rather than doing
+      // nothing, which is what it looks like it should do.
+      if(e.key !== 'Enter') return;
+      const only = hits.querySelectorAll('.namehit');
+      if(only.length === 1) only[0].click();
+      else if(picked) passInput.focus();
+    });
+  }
+
+  function workerNav(active){
+    const item = (k,label) => `<button class="${active===k?'on':''}" data-nav="${k}">${label}</button>`;
+    return `<div class="nav">${item('submit','Submit Sale')}${item('pool','My Pool')}</div>`;
+  }
+  function wireWorkerNav(){
+    document.querySelectorAll('[data-nav]').forEach(b=>{
+      b.onclick = () => b.dataset.nav === 'submit' ? renderSubmit() : renderPool();
+    });
+    const lo = $('logout');
+    // Signing out drops a kept session too — otherwise "keep me signed in"
+    // would quietly put the same person straight back in.
+    if(lo) lo.onclick = () => { clearWorkerSession(); WORKER = null; renderLogin(); };
+  }
+
+  // ---------- Submit a sale ----------
+  async function renderSubmit(){
+    const settings = await getSettings();
+    const workers = await getWorkers();
+    const others = activeOnly(workers).filter(w=>w.id !== WORKER.id);
+    const customers = liveCustomers(await getCustomers());
+
+    const live = (settings.spiffs||[]).filter(s=>{
+      const d = todayStr();
+      return (!s.start || d >= s.start) && (!s.end || d <= s.end);
+    });
+    const spiffLine = live.length
+      ? `<div class="banner b-gold">★ Live boosts: ${live.map(s=>`<b>${esc(s.multiplier)}× ${esc(saleTypeLabel(s.saleType))}</b>`).join(' · ')}</div>`
+      : '';
+
+    root.innerHTML = shell('','Submit a sale for approval', `
+      ${spiffLine}
+      <div class="stats">
+        <div class="stat"><div class="n" style="font-size:17px;">${esc(WORKER.name)}</div><div class="l">Worker</div></div>
+        <div class="stat"><div class="n" style="font-size:17px;">${fmtDate(new Date().toISOString())}</div><div class="l">Date</div></div>
+      </div>
+      <div class="card">
+        <div class="field">
+          <label>Sale type</label>
+          <select id="f-type">
+            <option value="">Select sale type…</option>
+            ${SALE_TYPES.map(t=>`<option value="${t.id}">${esc(t.label)}</option>`).join('')}
+          </select>
+        </div>
+        <div id="spiff-box"></div>
+        <div class="field">
+          <label>Referred by — optional</label>
+          <select id="f-ref">
+            <option value="">No one — I brought this in myself</option>
+            ${others.map(w=>`<option value="${esc(w.id)}">${esc(w.name)}</option>`).join('')}
+          </select>
+          <div class="hint">A teammate who helped bring this in. They earn the same points you do.</div>
+        </div>
+        <div id="ref-box"></div>
+        <div class="field"><label>Pickup form number</label><input id="f-pf" placeholder="e.g. PF-10234"></div>
+        <div id="bill-box"></div>
+        <div class="field">
+          <label>Pickup form</label>
+          <div class="drop" id="f-drop">Tap to attach — PDF or photo</div>
+          <input type="file" id="f-pdf" accept="${ACCEPT}" style="display:none;">
+          <div class="hint">Up to ${sizeLimitLabel()}.${DRIVE_ON ? ' Filed straight into the company Drive.' : ''}</div>
+        </div>
+        <div id="flow-box"></div>
+        <button class="btn btn-primary" id="f-go">Submit order</button>
+        <div id="f-msg" class="sm" style="margin-top:10px;"></div>
+      </div>
+    `, { logout:true, nav:workerNav('submit') });
+    wireWorkerNav();
+
+    // Live SPIFF feedback, so the worker sees the boost before they finish
+    // filling the form rather than after an admin approves it. The billing
+    // name control changes with it: an upsell has to name an existing client
+    // from the admin's list, anything else is a name typed in.
+    const onType = () => {
+      const t = $('f-type').value;
+      const box = $('spiff-box');
+      box.innerHTML = !t ? '' : (() => {
+        const b = spiffFor(settings, t, new Date().toISOString());
+        return b
+          ? `<div class="banner b-green" style="margin-bottom:12px;">✓ Qualifies for <b>${esc(b.multiplier)}× SPIFF</b> — ${esc(saleTypeLabel(t))}</div>`
+          : `<div class="banner b-grey" style="margin-bottom:12px;">No active boost for ${esc(saleTypeLabel(t))} — standard points apply</div>`;
+      })();
+
+      const flow = $('flow-box');
+      flow.innerHTML = !t ? '' : (() => {
+        const rest = FLOWS[t === 'upsell' ? 'upsell' : 'default'].slice(1);
+        const names = rest.map(st => '<b>' + esc(st.doc) + '</b>').join(', then ');
+        return `<div class="banner b-grey" style="margin-bottom:12px;"><span>`
+          + `${rest.length} more stage${rest.length===1?'':'s'} follow: ${names}. `
+          + `You add them from My Pool as they happen, and the points land once everything is approved.</span></div>`;
+      })();
+
+      const bill = $('bill-box');
+      if(t === 'upsell'){
+        bill.innerHTML = customers.length
+          ? `<div class="field"><label>Existing customer</label>
+               <select id="f-bill">
+                 <option value="">Select the customer…</option>
+                 ${customers.map(c=>`<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('')}
+               </select>
+               <div class="hint">Upsells have to be attributed to a client admin already has on file.</div>
+             </div>`
+          : `<div class="banner b-red" style="margin-bottom:12px;"><span>No customers on file yet. Ask admin to add this client before submitting an upsell.</span></div>`;
+      } else {
+        bill.innerHTML = `<div class="field"><label>Billing name</label>
+            <input id="f-bill" placeholder="e.g. ABC Trading Sdn Bhd"></div>`;
+      }
+    };
+    $('f-type').onchange = onType;
+    onType();
+
+    $('f-ref').onchange = () => {
+      const id = $('f-ref').value;
+      $('ref-box').innerHTML = id
+        ? `<div class="banner b-blue" style="margin-bottom:12px;"><span><b>${esc(workerName(workers,id))}</b> earns the same points once this is approved</span></div>`
+        : '';
+    };
+
+    let picked = null;
+    $('f-drop').onclick = () => $('f-pdf').click();
+    $('f-pdf').onchange = e => {
+      const file = e.target.files[0];
+      if(!file) return;
+      const bad = fileProblem(file);
+      if(bad){
+        $('f-drop').className = 'drop';
+        $('f-msg').style.color = 'var(--red)';
+        $('f-msg').textContent = bad;
+        picked = null; return;
+      }
+      picked = file;
+      $('f-drop').className = 'drop has';
+      $('f-drop').textContent = '✓ ' + file.name + ' (' + Math.round(file.size/1024) + ' KB)';
+      $('f-msg').textContent = '';
+    };
+
+    $('f-go').onclick = async function(){
+      const msg = $('f-msg');
+      const saleType = $('f-type').value;
+      const billEl = $('f-bill');
+      const billingName = billEl ? billEl.value.trim() : '';
+      const pickupNo = $('f-pf').value.trim();
+      const referrerId = $('f-ref').value || null;
+
+      msg.style.color = 'var(--red)';
+      if(!saleType){ msg.textContent = 'Pick a sale type.'; return; }
+      if(!billingName){
+        msg.textContent = saleType === 'upsell'
+          ? 'Pick the existing customer.' : 'Enter the billing name.';
+        return;
+      }
+      if(!pickupNo){ msg.textContent = 'Enter the pickup form number.'; return; }
+      if(!picked){ msg.textContent = 'Attach the pickup form.'; return; }
+
+      this.disabled = true;
+      const id = uid();
+      const sub = {
+        id, workerId:WORKER.id, workerName:WORKER.name,
+        date:todayStr(), submittedAt:new Date().toISOString(),
+        saleType, pickupNo, billingName,
+        // Keyed in later, at the invoice stage — neither is known when the
+        // job is first picked up.
+        invoiceNo:null, billingValue:null, invoicedAt:null,
+        referrerId, referrerName: referrerId ? workerName(workers, referrerId) : null,
+        docs:{},
+        status:'collecting',
+        approvedAt:null, holdUntil:null, rejectReason:null,
+        basePoints:null, multiplier:null, awardedPoints:null, spiffLabel:null
+      };
+
+      // The pickup form goes first. If it cannot be filed there is no
+      // submission at all, rather than one an admin opens to find nothing
+      // attached to it.
+      try{
+        this.textContent = 'Uploading…';
+        sub.docs.order = await attachDoc(sub, 'order', picked);
+      }catch(err){
+        console.error('pickup form upload failed:', err);
+        this.disabled = false; this.textContent = 'Submit order';
+        msg.textContent = err.message || 'Could not upload the pickup form — try again.';
+        return;
+      }
+
+      this.textContent = 'Submitting…';
+      if(!await saveSubmission(sub)){
+        this.disabled = false; this.textContent = 'Submit order';
+        msg.textContent = 'Could not submit — try again.';
+        return;
+      }
+      toast('Order submitted — add the payment slip when it comes in');
+      renderPool();
+    };
+  }
+
+  // ---------- My Pool ----------
+  async function renderPool(){
+    root.innerHTML = shell('','Loading…', '<div class="empty">Loading your pool…</div>',
+      { logout:true, nav:workerNav('pool') });
+    wireWorkerNav();
+
+    const [settings, awards, subs, lines] = await Promise.all([
+      getSettings(), getAwardsFor(WORKER.id), getSubmissionsFor(WORKER.id), getRedemptionsFor(WORKER.id)
+    ]);
+
+    // Earned less redeemed. The split below is of everything earned, so it
+    // keeps reading sensibly after a redemption rather than going negative
+    // on whichever half happened to be smaller.
+    const bal = balanceOf(WORKER.id, awards, lines);
+    const balance = bal.balance;
+
+    // Season progress — only counts awards approved inside the season window.
+    const inSeason = a => (!settings.seasonStart || a.approvedAt >= settings.seasonStart)
+                       && (!settings.seasonEnd   || a.approvedAt <= settings.seasonEnd + 'T23:59:59');
+    const seasonPts = sumPts(awards.filter(inSeason));
+    const tiers = (settings.tiers||[]).slice().sort((a,b)=> Number(a.threshold) - Number(b.threshold));
+    const next = tiers.find(t=> seasonPts < Number(t.threshold));
+    const reached = tiers.filter(t=> seasonPts >= Number(t.threshold)).pop();
+
+    const seasonCard = tiers.length ? `
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;">
+          <span class="l xs" style="font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);">Season cash bonus</span>
+          <b style="font-size:14px;">${pts(seasonPts)}${next?' / '+pts(next.threshold):''} pts</b>
+        </div>
+        <div class="bar" style="margin:9px 0;"><i style="width:${next?Math.min(100, Math.round(seasonPts/Number(next.threshold)*100)):100}%"></i></div>
+        <div class="sm muted">${
+          next
+            ? pts(Number(next.threshold) - seasonPts) + ' pts to the next tier — <b style="color:var(--text);">+ RM ' + rm(next.bonus) + '</b> at ' + pts(next.threshold) + ' pts'
+            : (reached
+                ? (lines.some(l => l.kind === 'bonus')
+                    ? 'Top tier reached — <b style="color:var(--green);">+ RM ' + rm(reached.bonus) + ' paid</b>'
+                    : 'Top tier reached — <b style="color:var(--text);">+ RM ' + rm(reached.bonus) + '</b> due at season end')
+                : 'No tiers set yet')
+        }</div>
+      </div>` : '';
+
+    // Sales still being built up. This is where the next document gets added,
+    // and where the worker can see what the sale will be worth once it lands.
+    const open = subs.filter(s => s.status === 'collecting' || s.status === 'pending' || s.status === 'rejected');
+    const projectedTotal = open
+      .filter(s => s.status !== 'rejected' && hasValue(s))
+      .reduce((t,s)=> t + projectedPoints(s, settings).points, 0);
+
+    const stageTrack = (sub) => stagesFor(sub).map(st=>{
+      const done = !!(sub.docs && sub.docs[st.id]);
+      return `<span class="step ${done?'on':''}" title="${esc(st.doc)}">${done?'✓':''} ${esc(st.label)}</span>`;
+    }).join('<span class="steparrow">›</span>');
+
+    const openCard = open.length ? `
+      <div>
+        <div class="xs" style="font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">
+          In progress${projectedTotal ? ' · ' + pts(projectedTotal) + ' pts projected' : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+        ${open.map(s=>{
+          const p = projectedPoints(s, settings);
+          const nx = nextStage(s);
+          const rejected = s.status === 'rejected';
+          // The invoice stage asks for figures as well as a file, so it opens
+          // a short form in place rather than going straight to a file picker.
+          const action = rejected
+            ? `<div class="banner b-red" style="margin-top:10px;"><span><b>Rejected.</b> ${esc(s.rejectReason||'')}</span></div>`
+            : !nx
+              ? `<div class="banner b-gold" style="margin-top:10px;"><span>Everything in — waiting for admin to review.</span></div>`
+              : nx.details
+                ? `<button class="btn btn-gold btn-sm" style="width:100%;margin-top:10px;" data-invopen="${esc(s.id)}">${esc(nx.verb)}</button>
+                   <div class="invform" id="iv-${esc(s.id)}" hidden data-stage="${esc(nx.id)}">
+                     ${nx.details.includes('invoiceNo') ? `<div class="field"><label>Invoice / OR number</label><input id="iv-no-${esc(s.id)}" placeholder="e.g. INV-88210"></div>` : ''}
+                     ${nx.details.includes('billingValue') ? `<div class="field"><label>Billing value before tax (RM)</label><input id="iv-val-${esc(s.id)}" inputmode="decimal" placeholder="0.00"></div>` : ''}
+                     <div class="drop" id="iv-drop-${esc(s.id)}">Tap to attach the ${esc(nx.doc)} — PDF or photo</div>
+                     <button class="btn btn-gold btn-sm" style="width:100%;margin-top:10px;" data-invsave="${esc(s.id)}">Save ${esc(nx.doc)}</button>
+                     <div class="xs" id="iv-msg-${esc(s.id)}" style="margin-top:8px;"></div>
+                   </div>`
+                : `<button class="btn btn-gold btn-sm" style="width:100%;margin-top:10px;" data-up="${esc(s.id)}" data-stage="${esc(nx.id)}">${esc(nx.verb)}</button>`;
+          return `<div class="card" style="padding:14px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;">
+              <div><div style="font-weight:700;font-size:14px;">${esc(subTitle(s))}</div>
+                   <div class="xs muted">${p.known
+                      ? esc(s.invoiceNo) + ' · RM ' + rm(s.billingValue)
+                      : esc(s.pickupNo||'') + ' · value comes with the '
+                        + esc((stagesFor(s).find(st => (st.details||[]).includes('billingValue')) || {doc:'invoice'}).doc)}</div></div>
+              <div style="text-align:right;">
+                ${p.known
+                  ? `<b style="font-size:14px;">${pts(p.points)} pts</b>
+                     ${p.mult > 1 ? `<div class="tagline t-boost">${esc(String(p.mult))}× SPIFF</div>` : ''}`
+                  : `<span class="xs muted" style="white-space:nowrap;">Not valued yet</span>
+                     ${p.mult > 1 ? `<div class="tagline t-boost">${esc(String(p.mult))}× SPIFF held</div>` : ''}`}
+              </div>
+            </div>
+            <div class="steps">${stageTrack(s)}</div>
+            ${action}
+            ${s.referrerId ? `<div class="xs muted" style="margin-top:8px;">Referred by ${esc(s.referrerName)} — they earn the same.</div>` : ''}
+          </div>`;
+        }).join('')}
+        </div>
+        <input type="file" id="stage-file" accept="${ACCEPT}" style="display:none;">
+      </div>` : '';
+
+    // Activity blends the worker's own submissions with points credited to
+    // them as a referrer — the referral ones are somebody else's submission,
+    // so they are labelled rather than mixed in silently.
+    const refRows = awards.filter(a=>a.kind === 'referral').map(a=>({
+      when:a.approvedAt, title:a.billingName, sub:a.invoiceNo + ' · referral credit',
+      chip:'<span class="chip c-ref">Referral</span>',
+      extra:'+ ' + pts(a.points) + ' pts'
+    }));
+    // Settled sales only — anything still being built up lives in the card
+    // above, where it can actually be acted on.
+    const ownRows = subs.filter(s=> s.status === 'approved').map(s=>{
+      const a = awards.find(x=>x.submissionId===s.id && x.kind==='own');
+      let chip = '<span class="chip c-pool">Pooled</span>', extra = pts(s.awardedPoints)+' pts';
+      return { when:s.approvedAt||s.submittedAt, title:subTitle(s),
+               sub:(s.invoiceNo||'—')+' · RM '+rm(s.billingValue), chip, extra };
+    });
+    const activity = ownRows.concat(refRows)
+      .sort((a,b)=> String(b.when||'').localeCompare(String(a.when||'')))
+      .slice(0,15);
+
+    root.innerHTML = shell('','Commission points & payout', `
+      <div class="balance">
+        <div class="sm" style="color:#AEB8CC;">Pool balance</div>
+        <div class="big">${pts(balance)} pts</div>
+        <div class="rm">≈ RM ${rm(balance * RM_PER_POINT)}</div>
+        <div class="split">
+          <div><div class="k">My sales</div><div class="v">${pts(bal.own)} pts</div></div>
+          <div><div class="k">Referral</div><div class="v">${pts(bal.referral)} pts</div></div>
+        </div>
+        <div class="sm" style="color:#AEB8CC;margin-top:11px;">${
+          bal.spent ? pts(bal.spent) + ' pts already redeemed · ' : ''
+        }1 pt = RM 0.01</div>
+      </div>
+      ${openCard}
+      ${seasonCard}
+      <div>
+        <div class="xs" style="font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Earned</div>
+        <div class="list">${
+          activity.length ? activity.map(r=>`
+            <div class="row">
+              <div><div style="font-weight:700;font-size:14px;">${esc(r.title)}</div><div class="xs muted">${esc(r.sub)}</div></div>
+              <div style="text-align:right;">${r.chip}<div class="xs muted" style="margin-top:3px;">${r.extra}</div></div>
+            </div>`).join('') : '<div class="empty">Nothing approved yet.</div>'
+        }</div>
+      </div>
+      ${lines.length ? `
+      <div>
+        <div class="xs" style="font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Redeemed</div>
+        <div class="list">${lines.map(l=>`
+          <div class="row">
+            <div><div style="font-weight:700;font-size:14px;">${esc(l.label)}</div><div class="xs muted">${fmtDate(l.redeemedAt)}${l.note ? ' · ' + esc(l.note) : ''}</div></div>
+            <div style="text-align:right;">
+              <b style="color:var(--green);">RM ${rm(l.amount)}</b>
+              ${l.kind === 'bonus'
+                ? '<div class="xs muted">bonus · no points used</div>'
+                : '<div class="xs" style="color:var(--red);">−' + pts(l.points) + ' pts</div>'}
+            </div>
+          </div>`).join('')}</div>
+      </div>` : ''}
+    `, { logout:true, nav:workerNav('pool') });
+    wireWorkerNav();
+
+    // Adding the next document to a sale already in flight. One hidden file
+    // input is shared by every card — which one is being filled is remembered
+    // here rather than by putting an input in each row.
+    const fileInput = $('stage-file');
+    if(fileInput){
+      let target = null;
+      document.querySelectorAll('[data-up]').forEach(b=>{
+        b.onclick = () => {
+          target = { id:b.dataset.up, stage:b.dataset.stage, btn:b };
+          fileInput.value = '';
+          fileInput.click();
+        };
+      });
+      fileInput.onchange = async e => {
+        const file = e.target.files[0];
+        if(!file || !target) return;
+        const bad = fileProblem(file);
+        if(bad) return toast(bad);
+        const sub = subs.find(s => s.id === target.id);
+        if(!sub) return;
+        const btn = target.btn;
+        btn.disabled = true; btn.textContent = 'Uploading…';
+        try{
+          const entry = await attachDoc(sub, target.stage, file);
+          const docs = Object.assign({}, sub.docs || {}, { [target.stage]: entry });
+          const merged = Object.assign({}, sub, { docs });
+          // Only a sale with every document AND its invoice figures goes to
+          // admin; anything short of that is still being collected.
+          const complete = isComplete(merged);
+          const ok = await saveSubmission(Object.assign(merged, {
+            status: complete ? 'pending' : 'collecting',
+            completedAt: complete ? new Date().toISOString() : null
+          }));
+          if(!ok) throw new Error('Could not save.');
+          toast(complete ? 'Everything in — sent for review' : 'Added — next stage when it happens');
+          renderPool();
+        }catch(err){
+          console.error('stage upload failed:', err);
+          btn.disabled = false;
+          btn.textContent = stageDef(target.stage).verb;
+          toast(err.message || 'Could not upload — try again');
+        }
+      };
+    }
+
+    // The invoice stage: three figures and a file, saved together so a sale
+    // can never end up with an invoice document but no value behind it.
+    document.querySelectorAll('[data-invopen]').forEach(b=>{
+      b.onclick = () => {
+        const box = $('iv-' + b.dataset.invopen);
+        if(!box) return;
+        box.hidden = !box.hidden;
+        const def = stageDef(box.dataset.stage);
+        b.textContent = box.hidden ? (def ? def.verb : 'Add') : 'Cancel';
+      };
+    });
+
+    document.querySelectorAll('[data-invsave]').forEach(btn=>{
+      const id = btn.dataset.invsave;
+      const drop = $('iv-drop-' + id);
+      const msg  = $('iv-msg-' + id);
+      let file = null;
+
+      // Each form gets its own picker, created here rather than put in the
+      // markup, so a card that is never opened costs nothing.
+      const input = document.createElement('input');
+      input.type = 'file'; input.accept = ACCEPT; input.style.display = 'none';
+      document.body.appendChild(input);
+      drop.onclick = () => { input.value = ''; input.click(); };
+      input.onchange = e => {
+        const f = e.target.files[0];
+        if(!f) return;
+        const bad = fileProblem(f);
+        if(bad){ msg.style.color='var(--red)'; msg.textContent = bad; file = null; drop.className='drop'; return; }
+        file = f;
+        drop.className = 'drop has';
+        drop.textContent = '✓ ' + f.name + ' (' + Math.round(f.size/1024) + ' KB)';
+        msg.textContent = '';
+      };
+
+      btn.onclick = async () => {
+        const sub = subs.find(s => s.id === id);
+        if(!sub) return;
+        const stage = $('iv-' + id).dataset.stage;
+        const def = stageDef(stage);
+        const wants = def.details || [];
+        const label = def.doc;
+
+        // Only the figures this stage asks for are read. An upsell is
+        // evidenced by a WhatsApp message and carries no invoice number,
+        // so demanding one would make the sale impossible to complete.
+        const patch = {};
+        msg.style.color = 'var(--red)';
+        if(wants.includes('invoiceNo')){
+          const no = $('iv-no-' + id).value.trim();
+          if(!no){ msg.textContent = 'Enter the invoice or OR number.'; return; }
+          patch.invoiceNo = no;
+        }
+        if(wants.includes('billingValue')){
+          const v = parseFloat(String($('iv-val-' + id).value).replace(/,/g,''));
+          if(!isFinite(v) || v <= 0){ msg.textContent = 'Enter the billing value before tax.'; return; }
+          patch.billingValue = v;
+        }
+        if(!file){ msg.textContent = 'Attach the ' + label + '.'; return; }
+
+        btn.disabled = true; btn.textContent = 'Uploading…';
+        try{
+          const entry = await attachDoc(sub, stage, file);
+          const merged = Object.assign({}, sub, patch, {
+            valuedAt: new Date().toISOString(),
+            docs: Object.assign({}, sub.docs || {}, { [stage]: entry })
+          });
+          const complete = isComplete(merged);
+          const ok = await saveSubmission(Object.assign(merged, {
+            status: complete ? 'pending' : 'collecting',
+            completedAt: complete ? new Date().toISOString() : null
+          }));
+          if(!ok) throw new Error('Could not save.');
+          toast(complete ? 'Everything in — sent for review' : (def.doc + ' saved'));
+          renderPool();
+        }catch(err){
+          console.error('stage details save failed:', err);
+          btn.disabled = false; btn.textContent = 'Save ' + label;
+          msg.textContent = err.message || 'Could not save — try again.';
+        }
+      };
+    });
+  }
+
+  // ===================================================================
+  // Admin
+  // ===================================================================
+  async function renderAdminGate(){
+    if(sessionStorage.getItem('epx_admin_unlocked') === '1') return renderAdmin('pending');
+    // The same portal shell the workers sign in through. The admin screens
+    // themselves are wide because they hold tables; the way in is one field,
+    // and in the wide shell it read as a small card adrift in empty space.
+    root.innerHTML = `
+      <div class="worker-shell">
+        <div class="worker-hero">
+          <div class="co">Exprexa Sales &amp; Reward</div>
+          <div class="sub">Admin</div>
+          <a class="admin-in" href="#" id="to-worker">Worker</a>
+        </div>
+        <div class="worker-body signin">
+          <div class="eyebrow" style="margin-bottom:10px;">Admin sign in</div>
+          <div class="field"><label>Admin password</label>
+            <input type="password" id="ad-pass" placeholder="••••••" autocomplete="current-password"></div>
+          <button class="btn btn-primary btn-block" id="ad-go">Log In</button>
+          <div id="ad-msg" style="margin-top:9px;font-size:12.5px;"></div>
+          <div class="xs muted" style="margin-top:14px;line-height:1.5;">
+            Same admin password as the attendance app.
+          </div>
+        </div>
+      </div>`;
+    // Cleans #admin out of the bar rather than leaving a bare # behind, so
+    // the address can be copied to a worker as-is.
+    $('to-worker').onclick = e => {
+      e.preventDefault();
+      dropHash();
+      renderLogin();
+    };
+    $('ad-pass').focus();
+
+    const go = async () => {
+      const btn = $('ad-go'), msg = $('ad-msg');
+      btn.disabled = true; btn.textContent = 'Checking…';
+      const stored = await getAdminHash();
+      if(!stored){
+        btn.disabled = false; btn.textContent = 'Log In';
+        msg.style.color='var(--red)';
+        msg.textContent = 'No admin password is set in the attendance app yet.';
+        return;
+      }
+      const hash = await sha256Hex($('ad-pass').value);
+      if(hash === stored){
+        sessionStorage.setItem('epx_admin_unlocked','1');
+        renderAdmin('pending');
+      }else{
+        btn.disabled = false; btn.textContent = 'Log In';
+        msg.style.color='var(--red)'; msg.textContent = 'Incorrect password.';
+      }
+    };
+    $('ad-go').onclick = go;
+    $('ad-pass').onkeydown = e => { if(e.key==='Enter') go(); };
+  }
+
+  const ADMIN_TABS = [
+    ['pending','To review'], ['progress','In progress'], ['approved','Approved'],
+    ['closed','Closed'], ['customers','Customers'], ['rewards','Rewards'], ['redeem','Redeem']
+  ];
+
+  async function renderAdmin(tab){
+    const tabs = `<div class="tabs">${ADMIN_TABS.map(([k,l])=>
+      `<button class="tab${k===tab?' active':''}" data-tab="${k}">${l}</button>`).join('')}</div>`;
+
+    root.innerHTML = shell('','Loading…','<div class="empty">Loading…</div>', { tag:'Admin', wide:true, tabs });
+    document.querySelectorAll('[data-tab]').forEach(b=> b.onclick = ()=> renderAdmin(b.dataset.tab));
+
+    const [subs, awards, settings, workers, customers, redemptions] = await Promise.all([
+      getSubmissions(), getAwards(), getSettings(), getWorkers(), getCustomers(), getRedemptions()
+    ]);
+
+    let body = '';
+    if(tab === 'pending')         body = viewPending(subs, settings);
+    else if(tab === 'progress')   body = viewProgress(subs, settings);
+    else if(tab === 'approved')   body = viewApproved(subs, awards);
+    else if(tab === 'closed')     body = viewClosed(subs);
+    else if(tab === 'customers')  body = viewCustomers(customers, subs);
+    else if(tab === 'rewards')    body = viewRewards(settings);
+    else if(tab === 'redeem')     body = viewRedeem(awards, workers, redemptions, settings);
+
+    root.innerHTML = shell('', ADMIN_TABS.find(t=>t[0]===tab)[1], body, { tag:'Admin', wide:true, tabs });
+    document.querySelectorAll('[data-tab]').forEach(b=> b.onclick = ()=> renderAdmin(b.dataset.tab));
+
+    if(tab === 'pending')   { wirePending(subs, settings); wireFilters('fp'); }
+    if(tab === 'progress')  { wireProgress(subs); wireFilters('fg'); }
+    if(tab === 'approved')  wireFilters('fa');
+    if(tab === 'closed')    wireFilters('fc');
+    if(tab === 'customers') wireCustomers(customers);
+    if(tab === 'rewards')   wireRewards(settings);
+    if(tab === 'redeem')    wireRedeem(awards, workers, redemptions, settings);
+    wirePdfLinks();
+    labelTableCells();
+  }
+
+  // Copies each column's heading onto the cells below it, so the phone layout
+  // can print the label beside the value. Doing it here keeps the table markup
+  // free of a data attribute repeated on every cell.
+  function labelTableCells(){
+    document.querySelectorAll('table.t').forEach(t=>{
+      const rows = [...t.rows];
+      if(!rows.length) return;
+      const heads = [...rows[0].cells].map(c=>c.textContent.trim());
+      rows.slice(1).forEach(r=>{
+        [...r.cells].forEach((c,i)=>{ if(heads[i]) c.setAttribute('data-l', heads[i]); });
+      });
+    });
+  }
+
+  // An invoice in Drive is just a link. One still held in Firestore has to be
+  // fetched and opened by hand, so the two cases render differently.
+  function wirePdfLinks(){
+    document.querySelectorAll('[data-pdf]').forEach(a=>{
+      a.onclick = async e => {
+        e.preventDefault();
+        const label = a.textContent;
+        a.textContent = 'Opening…';
+        const f = await getFileDoc(a.dataset.pdf, a.dataset.stage);
+        a.textContent = label;
+        if(!f) return toast('No file stored for this one');
+        const w = window.open();
+        if(w) w.document.write(`<iframe src="${f.dataUrl}" style="border:0;width:100%;height:100%;position:absolute;inset:0;"></iframe>`);
+      };
+    });
+  }
+
+  // The three documents behind a sale, each opening from Drive or from the
+  // Firestore fallback depending on where it was filed.
+  function docLinksInner(s){
+    return stagesFor(s).map(st=>{
+      const d = s.docs && s.docs[st.id];
+      if(!d) return `<span class="doclink off">${esc(st.doc)}</span>`;
+      return d.url
+        ? `<a class="doclink" href="${esc(d.url)}" target="_blank" rel="noopener">${esc(st.doc)}</a>`
+        : `<a class="doclink" href="#" data-pdf="${esc(s.id)}" data-stage="${esc(st.id)}">${esc(st.doc)}</a>`;
+    }).join('');
+  }
+  const docLinks = s => `<div class="doclist">${docLinksInner(s)}</div>`;
+
+  // ---------- Filters ----------
+  // The four sale tabs all answer the same two questions — whose sale is this,
+  // and which client — so they share one bar. Filtering hides rows in place
+  // rather than re-rendering, which keeps the cursor in the box while typing.
+  function filterBar(id){
+    return `<div class="card filters">
+      <div class="field">
+        <label>Search worker or billing name</label>
+        <input id="${id}-q" type="search" placeholder="Start typing a name…" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Sale category</label>
+        <select id="${id}-t">
+          <option value="">All categories</option>
+          ${SALE_TYPES.map(t=>`<option value="${t.id}">${esc(t.label)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="count" id="${id}-n"></div>
+    </div>`;
+  }
+
+  // Each row carries the two names and its category, so matching needs no
+  // lookup back into the data.
+  const rowKeys = s =>
+    ` data-w="${esc(String(s.workerName||'').toLowerCase())}"`
+  + ` data-b="${esc(String(s.billingName||subTitle(s)||'').toLowerCase())}"`
+  + ` data-ty="${esc(s.saleType||'')}"`;
+
+  function wireFilters(id){
+    const q = document.getElementById(id+'-q');
+    const t = document.getElementById(id+'-t');
+    const n = document.getElementById(id+'-n');
+    const table = document.querySelector('table.t');
+    if(!q || !table) return;
+    const rows = [...table.rows].slice(1);
+    const none = document.getElementById(id+'-none');
+    const apply = () => {
+      const needle = q.value.trim().toLowerCase();
+      const type = t.value;
+      let shown = 0;
+      rows.forEach(r=>{
+        const hay = (r.dataset.w||'') + ' ' + (r.dataset.b||'');
+        const ok = (!needle || hay.includes(needle)) && (!type || r.dataset.ty === type);
+        r.classList.toggle('hid', !ok);
+        if(ok) shown++;
+      });
+      // With nothing left to show, the column headings would hang there on
+      // their own, so the table goes with the rows.
+      if(none) none.classList.toggle('hid', shown > 0);
+      const wrap = table.closest('.wrap');
+      if(wrap) wrap.classList.toggle('hid', shown === 0);
+      n.textContent = shown === rows.length
+        ? `${rows.length} ${rows.length === 1 ? 'sale' : 'sales'}`
+        : `${shown} of ${rows.length} shown`;
+    };
+    q.oninput = apply;
+    t.onchange = apply;
+    apply();
+  }
+
+  // ---------- Pending ----------
+  function viewPending(subs, settings){
+    const pending = subs.filter(s=>s.status === 'pending');
+    const value = pending.reduce((t,s)=> t + Number(s.billingValue||0), 0);
+    const withRef = pending.filter(s=>s.referrerId).length;
+    if(!pending.length) return `<div class="card"><div class="empty">Nothing waiting for review.</div></div>`;
+    return `
+      <div class="stats">
+        <div class="stat"><div class="n">${pending.length}</div><div class="l">Pending review</div></div>
+        <div class="stat"><div class="n" style="color:var(--amber-dark);">RM ${rm(value)}</div><div class="l">Value pending</div></div>
+        <div class="stat"><div class="n">${withRef}</div><div class="l">Naming a referrer</div></div>
+      </div>
+      ${withRef ? `<div class="banner b-blue">${withRef} of these name a referrer — approving them awards the same points to both workers.</div>` : ''}
+      ${filterBar('fp')}
+      <div class="wrap"><table class="t">
+        <tr><th>Worker</th><th>Billing</th><th>Invoice</th><th>Documents</th><th>Value</th><th>Points</th><th></th></tr>
+        ${pending.map(s=>{
+          const p = projectedPoints(s, settings);
+          return `<tr${rowKeys(s)}>
+            <td><b>${esc(s.workerName)}</b>${s.referrerId?`<div class="tagline t-ref">+ ${esc(s.referrerName)} · referral</div>`:''}</td>
+            <td>${esc(subTitle(s))}<div class="xs muted">${esc(saleTypeLabel(s.saleType))}</div>
+                <div class="xs muted">Ordered ${fmtDate(s.submittedAt)}</div></td>
+            <td class="nb">${esc(s.invoiceNo)}<div class="xs muted">${esc(s.pickupNo||'—')}</div></td>
+            <td>${docLinks(s)}</td>
+            <td class="nb">RM ${rm(s.billingValue)}</td>
+            <td><b>${pts(p.points)}</b>${p.mult>1?`<div class="tagline t-boost">${esc(String(p.mult))}× SPIFF</div>`:''}
+                ${s.referrerId?`<div class="tagline t-ref">×2 payees</div>`:''}</td>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-sm btn-gold" data-ok="${esc(s.id)}">Approve</button>
+              <button class="btn btn-sm btn-ghost" data-no="${esc(s.id)}">Reject</button>
+            </td></tr>`;
+        }).join('')}
+      </table></div>
+      <div class="card hid" id="fp-none"><div class="empty">No sale matches that search.</div></div>
+      <div class="xs muted">All four documents and the invoice figures are in on every row here. The boost shown is the one that was live on the order date, which is what will be awarded.</div>`;
+  }
+
+  // ---------- In progress ----------
+  // Sales still collecting documents. Nothing to approve yet; this is for
+  // seeing what is outstanding and chasing it.
+  function viewProgress(subs, settings){
+    const open = subs.filter(s=>s.status === 'collecting')
+      .sort((a,b)=> String(a.submittedAt||'').localeCompare(String(b.submittedAt||'')));
+    if(!open.length) return `<div class="card"><div class="empty">Nothing in progress.</div></div>`;
+    const projected = open.reduce((t,s)=> t + projectedPoints(s, settings).points, 0);
+    const waiting = st => open.filter(s => (nextStage(s)||{}).id === st).length;
+    const age = iso => Math.max(0, Math.round((Date.now() - new Date(iso).getTime())/86400000));
+    return `
+      <div class="stats">
+        <div class="stat"><div class="n">${open.length}</div><div class="l">Sales in progress</div></div>
+        <div class="stat"><div class="n">${open.filter(s=>s.saleType==='upsell').length}</div><div class="l">Upsells (3-stage)</div></div>
+        <div class="stat"><div class="n">${waiting('pod')}</div><div class="l">Awaiting delivery proof</div></div>
+      </div>
+      <div class="xs muted">Cancel is for a client pulling out before delivery — it closes the sale without blaming the worker. After delivery, approve or reject instead.</div>
+      <div class="banner b-grey">${pts(projected)} pts projected across these — not awarded until every document is in and approved. Sales without an invoice yet have no value to count.</div>
+      ${filterBar('fg')}
+      <div class="wrap"><table class="t">
+        <tr><th>Worker</th><th>Billing</th><th>Invoice</th><th>Documents</th><th>Waiting on</th><th>Value</th><th>Age</th><th></th></tr>
+        ${open.map(s=>{
+          const nx = nextStage(s);
+          const days = age(s.submittedAt);
+          return `<tr${rowKeys(s)}>
+            <td><b>${esc(s.workerName)}</b></td>
+            <td>${esc(subTitle(s))}<div class="xs muted">${esc(saleTypeLabel(s.saleType))}</div></td>
+            <td class="xs nb">${s.invoiceNo ? esc(s.invoiceNo) : '<span class="muted">not invoiced</span>'}</td>
+            <td>${docLinks(s)}</td>
+            <td>${nx?`<span class="chip c-hold">${esc(nx.doc)}</span>`:''}</td>
+            <td class="nb">${hasValue(s) ? 'RM ' + rm(s.billingValue) : '<span class="muted">—</span>'}</td>
+            <td class="xs ${days>30?'':'muted'}" ${days>30?'style="color:var(--red);font-weight:700;"':''}>${days} days</td>
+            <td><button class="btn btn-sm btn-danger" data-cancel="${esc(s.id)}">Cancel</button></td>
+          </tr>`;
+        }).join('')}
+      </table></div>
+      <div class="card hid" id="fg-none"><div class="empty">No sale matches that search.</div></div>
+`;
+  }
+
+  function wirePending(subs, settings){
+    document.querySelectorAll('[data-ok]').forEach(b=>{
+      b.onclick = async () => {
+        const sub = subs.find(s=>s.id === b.dataset.ok);
+        if(!sub) return;
+        const who = sub.referrerId ? `${sub.workerName} and ${sub.referrerName}` : sub.workerName;
+        const p = projectedPoints(sub, settings);
+        if(!confirm(`Approve this sale?\n\n${pts(p.points)} pts to ${who}.\n`
+          + `Straight into the pool — delivery is already proven, so there is no hold.`)) return;
+        b.disabled = true; b.textContent = 'Approving…';
+        try{
+          const r = await approveSubmission(sub, settings);
+          toast(`Approved — ${pts(r.points)} pts${sub.referrerId?' each':''}`);
+          renderAdmin('pending');
+        }catch(e){
+          console.error('approve failed:', e);
+          b.disabled = false; b.textContent = 'Approve';
+          toast('Could not approve — try again');
+        }
+      };
+    });
+    document.querySelectorAll('[data-no]').forEach(b=>{
+      b.onclick = async () => {
+        const sub = subs.find(s=>s.id === b.dataset.no);
+        if(!sub) return;
+        const reason = prompt('Why is this being rejected?\nThe worker sees this and can fix and resubmit.');
+        if(reason === null) return;
+        if(!reason.trim()) return toast('A reason is needed');
+        b.disabled = true;
+        const ok = await rejectSubmission(sub, reason.trim());
+        toast(ok ? 'Rejected' : 'Could not reject');
+        renderAdmin('pending');
+      };
+    });
+  }
+
+  // ---------- Hold ----------
+  // ---------- Approved ----------
+  function viewApproved(subs, awards){
+    const approved = subs.filter(s=>s.status === 'approved');
+    if(!approved.length) return `<div class="card"><div class="empty">Nothing approved yet.</div></div>`;
+    const cleared = awards;
+    return `
+      <div class="stats">
+        <div class="stat"><div class="n">${approved.length}</div><div class="l">Approved</div></div>
+        <div class="stat"><div class="n" style="color:var(--amber-dark);">${pts(sumPts(awards))} pts</div><div class="l">Points awarded — incl referral</div></div>
+        <div class="stat"><div class="n">RM ${rm(sumPts(cleared) * RM_PER_POINT)}</div><div class="l">Awaiting payout</div></div>
+      </div>
+      ${filterBar('fa')}
+      <div class="wrap"><table class="t">
+        <tr><th>Worker</th><th>Billing</th><th>Invoice</th><th>Documents</th><th>Type</th><th>Points awarded</th><th>Approved</th><th>Status</th></tr>
+        ${approved.map(s=>{
+          const own = awards.find(a=>a.submissionId===s.id && a.kind==='own');
+          const ref = awards.find(a=>a.submissionId===s.id && a.kind==='referral');
+          const state = own ? '<span class="chip c-pool">In pool</span>'
+                            : '<span class="chip c-pend">—</span>';
+          return `<tr${rowKeys(s)}>
+            <td><b>${esc(s.workerName)}</b></td>
+            <td>${esc(subTitle(s))}</td>
+            <td class="xs nb">${esc(s.invoiceNo||'—')}</td>
+            <td>${docLinks(s)}</td>
+            <td class="xs">${esc(saleTypeLabel(s.saleType))}</td>
+            <td><b>${pts(s.awardedPoints)}</b>
+                <div class="xs muted">RM ${rm(s.billingValue)}${Number(s.multiplier)>1?' × '+s.multiplier+' SPIFF':' · no boost'}</div>
+                ${ref?`<div class="tagline t-ref">+ ${pts(ref.points)} pts → ${esc(s.referrerName)}</div>`:''}</td>
+            <td class="xs muted">${fmtDate(s.approvedAt)}</td>
+            <td>${state}</td>
+          </tr>`;
+        }).join('')}
+      </table></div>
+      <div class="card hid" id="fa-none"><div class="empty">No sale matches that search.</div></div>
+      <div class="xs muted">Points are final at whatever SPIFF was live on the approval date — ending a boost later never changes a sale already approved.</div>`;
+  }
+
+  // ---------- Rejected ----------
+  // ---------- Closed ----------
+  // Rejections and cancellations together: both end a sale, for different
+  // reasons, and an admin looking for "what happened to that job" should not
+  // have to guess which of two tabs it fell into.
+  function viewClosed(subs){
+    const closed = subs.filter(s => s.status === 'rejected' || s.status === 'cancelled')
+      .sort((a,b)=> String(b.rejectedAt||b.cancelledAt||'').localeCompare(String(a.rejectedAt||a.cancelledAt||'')));
+    if(!closed.length) return `<div class="card"><div class="empty">Nothing closed.</div></div>`;
+    const cancelled = closed.filter(s=>s.status === 'cancelled').length;
+    return `
+      <div class="stats">
+        <div class="stat"><div class="n">${closed.length - cancelled}</div><div class="l">Rejected</div></div>
+        <div class="stat"><div class="n">${cancelled}</div><div class="l">Cancelled by client</div></div>
+      </div>
+      ${filterBar('fc')}
+      <div class="wrap"><table class="t">
+      <tr><th>Worker</th><th>Billing</th><th>Invoice</th><th>Documents</th><th>Value</th><th>Outcome</th><th>Reason</th><th>When</th></tr>
+      ${closed.map(s=>{
+        const was = s.status === 'cancelled';
+        return `<tr${rowKeys(s)}>
+        <td><b>${esc(s.workerName)}</b></td>
+        <td>${esc(subTitle(s))}</td>
+        <td class="xs nb">${esc(s.invoiceNo||'—')}</td>
+        <td>${docLinks(s)}</td>
+        <td class="nb">${hasValue(s) ? 'RM ' + rm(s.billingValue) : '—'}</td>
+        <td><span class="chip ${was?'c-pend':'c-rej'}">${was?'Cancelled':'Rejected'}</span></td>
+        <td class="sm" style="color:${was?'var(--muted)':'var(--red)'};">${esc(s.rejectReason||s.cancelReason||'—')}</td>
+        <td class="xs muted">${fmtDate(s.rejectedAt||s.cancelledAt)}</td>
+      </tr>`;}).join('')}
+    </table></div>
+      <div class="card hid" id="fc-none"><div class="empty">No sale matches that search.</div></div>
+    <div class="xs muted">A rejected sale stays with the worker, who can correct it and submit again. A cancelled one is closed for good.</div>`;
+  }
+
+  // ---------- Customers ----------
+  function viewCustomers(customers, subs){
+    const live = liveCustomers(customers);
+    const archived = customers.filter(c=>c.archived);
+    const used = {};
+    subs.forEach(s=>{ if(s.billingName) used[s.billingName] = (used[s.billingName]||0) + 1; });
+    const row = c => `<tr>
+      <td><b>${esc(c.name)}</b>${c.archived?' <span class="chip c-pend">Archived</span>':''}</td>
+      <td class="xs muted">${fmtDate(c.createdAt)}</td>
+      <td>${used[c.name] ? used[c.name] + ' sale' + (used[c.name]===1?'':'s') : '<span class="muted">none yet</span>'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm ${c.archived?'btn-ghost':'btn-danger'}" data-arch="${esc(c.id)}">
+          ${c.archived ? 'Restore' : 'Archive'}</button>
+      </td></tr>`;
+    return `
+      <div class="stats">
+        <div class="stat"><div class="n">${live.length}</div><div class="l">Customers on file</div></div>
+        <div class="stat"><div class="n">${Object.keys(used).length}</div><div class="l">With a sale recorded</div></div>
+        <div class="stat"><div class="n">${archived.length}</div><div class="l">Archived</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Add a customer</h3>
+        <div class="sm muted" style="margin-bottom:12px;">These are the clients a worker can pick when submitting an upsell. Anything not on this list cannot be recorded as an upsell.</div>
+        <div class="field"><label>Customer name</label>
+          <input id="cu-name" placeholder="e.g. ABC Trading Sdn Bhd"></div>
+        <button class="btn btn-primary" id="cu-add">Add customer</button>
+        <div id="cu-msg" class="sm" style="margin-top:10px;"></div>
+      </div>
+
+      ${customers.length ? `<div class="wrap"><table class="t">
+        <tr><th>Customer</th><th>Added</th><th>Sales</th><th></th></tr>
+        ${live.map(row).join('')}${archived.map(row).join('')}
+      </table></div>
+      <div class="xs muted">Archiving only takes a customer out of the worker's picker. Sales already recorded against them keep their name.</div>`
+      : `<div class="card"><div class="empty">No customers yet. Add the first one above.</div></div>`}`;
+  }
+
+  function wireCustomers(customers){
+    $('cu-add').onclick = async function(){
+      const name = $('cu-name').value.trim();
+      const msg = $('cu-msg');
+      msg.style.color = 'var(--red)';
+      if(!name){ msg.textContent = 'Enter a customer name.'; return; }
+      // Same name twice would give the worker two identical-looking options
+      // and split that client's history across both.
+      if(customers.some(c => String(c.name||'').toLowerCase() === name.toLowerCase())){
+        msg.textContent = 'That customer is already on the list.'; return;
+      }
+      this.disabled = true; this.textContent = 'Adding…';
+      const ok = await saveCustomer({ id:uid(), name, createdAt:new Date().toISOString(), archived:false });
+      if(!ok){
+        this.disabled = false; this.textContent = 'Add customer';
+        msg.textContent = 'Could not add — try again.'; return;
+      }
+      toast('Customer added');
+      renderAdmin('customers');
+    };
+    document.querySelectorAll('[data-arch]').forEach(b=>{
+      b.onclick = async () => {
+        const c = customers.find(x => x.id === b.dataset.arch);
+        if(!c) return;
+        b.disabled = true;
+        const ok = await saveCustomer(Object.assign({}, c, { archived: !c.archived }));
+        toast(ok ? (c.archived ? 'Restored' : 'Archived') : 'Could not save');
+        renderAdmin('customers');
+      };
+    });
+  }
+
+  // ---------- Cancelling ----------
+  // A client pulling out mid-job is not a rejection — nobody did anything
+  // wrong, the sale simply stopped existing. It is only offered while the
+  // sale is still being collected: once delivery is proven there is nothing
+  // left to cancel, and approve or reject is the honest choice.
+  function wireProgress(subs){
+    document.querySelectorAll('[data-cancel]').forEach(b=>{
+      b.onclick = async () => {
+        const sub = subs.find(s => s.id === b.dataset.cancel);
+        if(!sub) return;
+        const reason = prompt('Why is this being cancelled?\nThe worker sees this on their My Pool.');
+        if(reason === null) return;
+        if(!reason.trim()) return toast('A reason is needed');
+        b.disabled = true; b.textContent = 'Cancelling…';
+        try{
+          await db.collection('epx_sales_submissions').doc(sub.id).set(
+            Object.assign({}, sub, {
+              status:'cancelled', cancelReason:reason.trim(),
+              cancelledAt:new Date().toISOString()
+            }));
+          toast('Cancelled');
+          renderAdmin('progress');
+        }catch(e){
+          console.error('cancel failed:', e);
+          b.disabled = false; b.textContent = 'Cancel';
+          toast('Could not cancel — try again');
+        }
+      };
+    });
+  }
+
+  // ---------- Clearing test data ----------
+  // Only this app's own collections. epx_workers and epx_config are shared
+  // with the attendance app and are never touched here — wiping those would
+  // take the roster and everyone's clock-ins with them.
+  const SALES_DATA = [
+    ['epx_sales_submissions', 'sale',            'sales'],
+    ['epx_sales_awards',      'point award',     'point awards'],
+    ['epx_sales_redemptions', 'ledger entry',    'ledger entries'],
+    ['epx_sales_files',       'stored document', 'stored documents'],
+    ['epx_sales_customers',   'customer',        'customers']
+  ];
+  const counted = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+
+  // Deleted a document at a time rather than in one batch: the volumes here
+  // are small, and this works the same whatever the backing store does with
+  // batch references.
+  async function wipeCollection(name){
+    const snap = await db.collection(name).get();
+    const ids = snap.docs.map(d => d.id);
+    for(let i = 0; i < ids.length; i += 20){
+      await Promise.all(ids.slice(i, i + 20)
+        .map(id => db.collection(name).doc(id).delete()));
+    }
+    return ids.length;
+  }
+
+  // ---------- Rewards ----------
+  function viewRewards(s){
+    const tierRow = (t,i) => `
+      <div class="tgrid" style="margin-bottom:8px;" data-tier="${i}">
+        <input class="ti-th" inputmode="numeric" value="${esc(t.threshold)}" placeholder="Points">
+        <input class="ti-bo" inputmode="decimal" value="${esc(t.bonus)}" placeholder="RM bonus">
+        <button class="btn btn-sm btn-danger" data-rmtier="${i}">✕</button>
+      </div>`;
+    const spiffRow = (sp,i) => `
+      <div class="card" style="padding:12px;margin-bottom:10px;" data-spiff="${i}">
+        <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:8px;flex-wrap:wrap;">
+          <div class="field" style="flex:1 1 140px;margin:0;">
+            <label>Boosted sale type</label>
+            <select class="sp-type">${SALE_TYPES.map(t=>
+              `<option value="${t.id}"${t.id===sp.saleType?' selected':''}>${esc(t.label)}</option>`).join('')}</select>
+          </div>
+          <div class="field" style="width:84px;margin:0;">
+            <label>Mult.</label><input class="sp-mult" inputmode="decimal" value="${esc(sp.multiplier)}">
+          </div>
+          <button class="btn btn-sm btn-danger" data-rmspiff="${i}">✕</button>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div class="field" style="flex:1;margin:0;"><label>Starts</label><input type="date" class="sp-start" value="${esc(sp.start||'')}"></div>
+          <div class="field" style="flex:1;margin:0;"><label>Ends</label><input type="date" class="sp-end" value="${esc(sp.end||'')}"></div>
+        </div>
+      </div>`;
+    return `
+      <div class="card">
+        <h3>Season</h3>
+        <div style="display:flex;gap:10px;">
+          <div class="field" style="flex:1;"><label>Season starts</label><input type="date" id="se-start" value="${esc(s.seasonStart||'')}"></div>
+          <div class="field" style="flex:1;"><label>Season ends</label><input type="date" id="se-end" value="${esc(s.seasonEnd||'')}"></div>
+        </div>
+        <div class="hint">Only points approved inside this window count toward a bonus tier.</div>
+      </div>
+
+      <div class="card">
+        <h3>Season cash bonus tiers</h3>
+        <div class="sm muted" style="margin-bottom:12px;">Add, remove or edit any number. Paid once at the highest tier a worker reaches by season end, on top of the normal pool cash-out.</div>
+        <div class="tgrid" style="margin-bottom:6px;">
+          <span class="xs" style="font-weight:700;text-transform:uppercase;color:var(--muted);">Points threshold</span>
+          <span class="xs" style="font-weight:700;text-transform:uppercase;color:var(--muted);">Bonus (RM)</span><span></span>
+        </div>
+        <div id="tiers">${(s.tiers||[]).map(tierRow).join('')}</div>
+        <button class="btn btn-ghost btn-sm" id="add-tier" style="width:100%;margin-top:6px;">+ Add tier</button>
+      </div>
+
+      <div class="card">
+        <h3>SPIFF boosts</h3>
+        <div class="sm muted" style="margin-bottom:12px;">Run more than one at once, each on its own sale type with its own multiplier. Matched against the sale type the worker picks when submitting.</div>
+        <div id="spiffs">${(s.spiffs||[]).map(spiffRow).join('')}</div>
+        <button class="btn btn-ghost btn-sm" id="add-spiff" style="width:100%;margin-top:6px;">+ Add SPIFF</button>
+      </div>
+
+      <button class="btn btn-primary" id="save-rewards">Save reward settings</button>
+      <div class="xs muted">A boost applies at the moment of approval. Changing one here never re-prices a sale that was already approved.</div>
+
+      <div class="card danger">
+        <div class="cardhead">
+          <h3>Clear test data</h3>
+          <span class="chip c-rej">Cannot be undone</span>
+        </div>
+        <div class="sm muted" style="margin-bottom:10px;">
+          For starting clean once you have finished testing. It deletes every
+          sale, point award, ledger entry and customer in this app.
+        </div>
+        <div class="sm" style="margin-bottom:12px;">
+          <b>Not touched:</b> your worker list and the admin password — those
+          belong to the attendance app and stay exactly as they are. Your
+          season, bonus tiers and SPIFFs above are kept too, so you can test
+          again without setting them up from scratch. Documents already filed
+          in your Google Drive folder stay there; delete those yourself if you
+          want them gone.
+        </div>
+        <div class="field"><label>Type RESET to confirm</label>
+          <input id="wipe-word" autocomplete="off" placeholder="RESET"></div>
+        <button class="btn btn-danger-solid" id="wipe-go" disabled>Clear all sales data</button>
+        <div id="wipe-msg" class="sm" style="margin-top:10px;"></div>
+      </div>`;
+  }
+
+  function wireRewards(s){
+    const redraw = () => { renderAdmin('rewards'); };
+    const collect = () => {
+      const tiers = [...document.querySelectorAll('#tiers [data-tier]')].map(d=>({
+        threshold: Number(String(d.querySelector('.ti-th').value).replace(/,/g,'')) || 0,
+        bonus:     Number(String(d.querySelector('.ti-bo').value).replace(/,/g,'')) || 0
+      })).filter(t=>t.threshold > 0);
+      const spiffs = [...document.querySelectorAll('#spiffs [data-spiff]')].map(d=>({
+        saleType:   d.querySelector('.sp-type').value,
+        multiplier: Number(d.querySelector('.sp-mult').value) || 1,
+        start:      d.querySelector('.sp-start').value || '',
+        end:        d.querySelector('.sp-end').value || ''
+      })).filter(x=>x.multiplier > 0);
+      return {
+        seasonStart: $('se-start').value || '',
+        seasonEnd:   $('se-end').value || '',
+        tiers, spiffs
+      };
+    };
+    $('add-tier').onclick = async () => { const n = collect(); n.tiers.push({threshold:0,bonus:0}); _settings = n; redraw(); };
+    $('add-spiff').onclick = async () => {
+      const n = collect();
+      n.spiffs.push({ saleType:'new_client', multiplier:2, start:todayStr(), end:'' });
+      _settings = n; redraw();
+    };
+    document.querySelectorAll('[data-rmtier]').forEach(b=> b.onclick = () => {
+      const n = collect(); n.tiers.splice(Number(b.dataset.rmtier),1); _settings = n; redraw();
+    });
+    document.querySelectorAll('[data-rmspiff]').forEach(b=> b.onclick = () => {
+      const n = collect(); n.spiffs.splice(Number(b.dataset.rmspiff),1); _settings = n; redraw();
+    });
+    $('save-rewards').onclick = async function(){
+      this.disabled = true; this.textContent = 'Saving…';
+      const ok = await saveSettings(collect());
+      this.disabled = false; this.textContent = 'Save reward settings';
+      toast(ok ? 'Reward settings saved' : 'Could not save');
+    };
+
+    // The typed word is the real guard — a dialog alone is too easy to click
+    // through, and this one cannot be taken back.
+    const word = $('wipe-word'), go = $('wipe-go'), msg = $('wipe-msg');
+    if(word && go){
+      word.oninput = () => { go.disabled = word.value.trim().toUpperCase() !== 'RESET'; };
+      go.onclick = async () => {
+        if(word.value.trim().toUpperCase() !== 'RESET') return;
+        if(!confirm('Delete every sale, award, ledger entry and customer?\n\n'
+          + 'Your worker list, admin password and reward settings are kept.\n'
+          + 'This cannot be undone.')) return;
+        go.disabled = true; word.disabled = true;
+        const done = [];
+        try{
+          for(const [name, one, many] of SALES_DATA){
+            go.textContent = 'Clearing ' + many + '…';
+            done.push(counted(await wipeCollection(name), one, many));
+          }
+          _ledger = { worker:'', page:0 };
+          msg.innerHTML = '<span style="color:var(--green);">Cleared: ' + esc(done.join(', ')) + '.</span>';
+          go.textContent = 'Cleared';
+          toast('Sales data cleared');
+        }catch(e){
+          console.error('wipe failed:', e);
+          // Partway through is worth saying out loud: some collections are
+          // already empty and the rest are not.
+          msg.innerHTML = '<span style="color:var(--red);">Stopped partway'
+            + (done.length ? ' after clearing ' + esc(done.join(', ')) : '')
+            + '. Nothing else was deleted — try again.</span>';
+          go.disabled = false; word.disabled = false;
+          go.textContent = 'Clear all sales data';
+        }
+      };
+    }
+  }
+
+  // ---------- Redeem ----------
+  // Settling is the whole balance at the standard rate — there is no amount
+  // to decide, so there is nothing to type and nothing to get wrong. The
+  // ledger below is the permanent record of what has gone out.
+  const LEDGER_PAGE = 50;
+  let _ledger = { worker:'', page:0 };
+
+  function viewRedeem(awards, workers, redemptions, settings){
+    const live = activeOnly(workers);
+    const bonuses = bonusesDue(workers, awards, redemptions, settings);
+    const owed = bonuses.filter(b => !b.paid);
+    const owedRM = owed.reduce((t,b)=> t + Number(b.tier.bonus||0), 0);
+    const rows = live.map(w => Object.assign({ w }, balanceOf(w.id, awards, redemptions)))
+      .filter(r => r.balance > 0)
+      .sort((a,b)=> b.balance - a.balance);
+    const outstanding = rows.reduce((t,r)=> t + r.balance, 0);
+    const period = new Date().toLocaleString('en-MY',{month:'short', year:'numeric'}) + ' payroll';
+
+    // Filtered and paged here rather than in the query: the whole ledger is
+    // already loaded for the balances, and slicing it costs nothing.
+    const filtered = _ledger.worker
+      ? redemptions.filter(r => r.workerId === _ledger.worker)
+      : redemptions;
+    const pages = Math.max(1, Math.ceil(filtered.length / LEDGER_PAGE));
+    const page = Math.min(_ledger.page, pages - 1);
+    const slice = filtered.slice(page * LEDGER_PAGE, (page + 1) * LEDGER_PAGE);
+    const from = filtered.length ? page * LEDGER_PAGE + 1 : 0;
+    const to = page * LEDGER_PAGE + slice.length;
+
+    return `
+      <div class="narrow">
+      <div class="stats">
+        <div class="stat"><div class="n">${rows.length}</div><div class="l">Workers with a balance</div></div>
+        <div class="stat"><div class="n" style="color:var(--amber-dark);">${pts(outstanding)} pts</div><div class="l">Outstanding · RM ${rm(outstanding * RM_PER_POINT)}</div></div>
+        <div class="stat"><div class="n"${owedRM?' style="color:var(--green);"':''}>RM ${rm(owedRM)}</div><div class="l">Season bonus owed</div></div>
+      </div>
+
+      <div class="card">
+        <h3>Redeem points</h3>
+        <div class="sm muted" style="margin-bottom:12px;">Settles a worker's whole balance at RM ${rm(RM_PER_POINT)} per point and records it against their name.</div>
+        <div class="field"><label>Worker</label>
+          <select id="rd-worker">
+            <option value="">Select a worker…</option>
+            ${rows.map(r=>`<option value="${esc(r.w.id)}" data-pts="${r.balance}">${esc(r.w.name)} — ${pts(r.balance)} pts</option>`).join('')}
+          </select>
+        </div>
+        <div id="rd-sum"></div>
+        <div class="field"><label>Note — optional</label><input id="rd-note" value="${esc(period)}"></div>
+        <button class="btn btn-primary" id="rd-go">Record redemption</button>
+        <div id="rd-msg" class="sm" style="margin-top:10px;"></div>
+        ${rows.length ? '' : '<div class="xs muted" style="margin-top:10px;">Nobody has points to redeem yet.</div>'}
+      </div>
+
+      ${bonuses.length ? `
+      <div class="card">
+        <div class="cardhead">
+          <h3>Season cash bonus</h3>
+          <span class="chip c-season">${esc(seasonLabel(settings))}</span>
+        </div>
+        <div class="sm muted" style="margin-bottom:12px;">Paid once per season at the highest tier a worker reaches. This is RM on top of their points — paying it does not touch their balance.</div>
+        <div class="wrap" style="border:none;"><table class="t">
+          <tr><th>Worker</th><th>Season points</th><th>Tier reached</th><th>Bonus</th><th></th></tr>
+          ${bonuses.map(b=>`<tr>
+            <td><b>${esc(b.w.name)}</b></td>
+            <td>${pts(b.seasonPoints)} pts</td>
+            <td>${pts(b.tier.threshold)} pts</td>
+            <td><b>RM ${rm(b.tier.bonus)}</b></td>
+            <td>${b.paid
+              ? `<span class="chip c-paid">Paid ${fmtDate(b.paid.redeemedAt)}</span>`
+              : `<button class="btn btn-sm btn-gold" data-bonus="${esc(b.w.id)}">Pay bonus</button>`}</td>
+          </tr>`).join('')}
+        </table></div>
+        <div class="xs muted" style="margin-top:10px;">A paid bonus is filed against this window, so the ledger still names the season once it has moved on.</div>
+      </div>` : ''}
+
+      <div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+          <div class="xs" style="font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);">Points ledger</div>
+          <div class="field" style="margin:0;width:240px;max-width:50%;">
+            <select id="lg-worker">
+              <option value="">All workers</option>
+              ${live.map(w=>`<option value="${esc(w.id)}"${w.id===_ledger.worker?' selected':''}>${esc(w.name)}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        ${slice.length ? `
+        <div class="wrap"><table class="t">
+          <tr><th>Date</th><th>Worker</th><th>Points</th><th>Amount</th><th>Note</th></tr>
+          ${slice.map(r=>`<tr>
+            <td><b>${fmtDate(r.redeemedAt)}</b></td>
+            <td>${esc(r.workerName)}${r.kind === 'bonus' ? '<div><span class="tagline t-boost">Season bonus</span></div>' : ''}</td>
+            <td>${r.kind === 'bonus' ? '<span class="muted">—</span>' : '<span style="color:var(--red);">−' + pts(r.points) + '</span>'}</td>
+            <td><b>RM ${rm(r.amount)}</b></td>
+            <td class="xs muted">${esc(r.note||'—')}</td>
+          </tr>`).join('')}
+        </table></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap;">
+          <span class="xs muted">Showing ${from}–${to} of ${filtered.length}</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-sm btn-ghost" id="lg-prev"${page === 0 ? ' disabled' : ''}>‹ Previous</button>
+            <button class="btn btn-sm btn-ghost" id="lg-next"${page >= pages - 1 ? ' disabled' : ''}>Next ›</button>
+          </div>
+        </div>` : `<div class="card"><div class="empty">Nothing redeemed yet.</div></div>`}
+        <div class="xs muted" style="margin-top:8px;">The ledger is permanent — a redemption cannot be edited once recorded.</div>
+      </div>
+      </div>`;
+  }
+
+  function wireRedeem(awards, workers, redemptions, settings){
+    const sel = $('rd-worker');
+    const sum = $('rd-sum');
+
+    // The amount is never typed: it is the balance at the standard rate, so
+    // what is shown here is exactly what gets written.
+    const refresh = () => {
+      const id = sel.value;
+      if(!id){ sum.innerHTML = ''; return; }
+      const bal = balanceOf(id, awards, redemptions).balance;
+      sum.innerHTML = `<div class="banner b-green" style="margin-bottom:12px;"><span>
+        <b>${pts(bal)} pts</b> × RM ${rm(RM_PER_POINT)} = <b>RM ${rm(bal * RM_PER_POINT)}</b>
+        <div class="xs" style="margin-top:3px;">Their balance drops to zero.</div></span></div>`;
+    };
+    sel.onchange = refresh;
+
+    $('rd-go').onclick = async function(){
+      const msg = $('rd-msg');
+      const workerId = sel.value;
+      msg.style.color = 'var(--red)';
+      if(!workerId){ msg.textContent = 'Pick a worker.'; return; }
+      const w = workers.find(x => x.id === workerId);
+      const bal = balanceOf(workerId, awards, redemptions).balance;
+      if(bal <= 0){ msg.textContent = 'That worker has nothing to redeem.'; return; }
+      const amount = Number((bal * RM_PER_POINT).toFixed(2));
+      if(!confirm(`Redeem ${w.name}'s balance?\n\n${pts(bal)} pts = RM ${rm(amount)}\n\n`
+        + `Their balance drops to zero. This cannot be undone.`)) return;
+
+      this.disabled = true; this.textContent = 'Recording…';
+      try{
+        await recordRedemption({ workerId, workerName:w.name,
+          label:'RM ' + rm(amount), points:bal, amount, note:$('rd-note').value.trim() });
+        toast('Redeemed — RM ' + rm(amount));
+        _ledger.page = 0;
+        renderAdmin('redeem');
+      }catch(e){
+        console.error('redemption failed:', e);
+        this.disabled = false; this.textContent = 'Record redemption';
+        msg.textContent = e.message || 'Could not record — try again.';
+      }
+    };
+
+    document.querySelectorAll('[data-bonus]').forEach(btn=>{
+      btn.onclick = async () => {
+        const b = bonusesDue(workers, awards, redemptions, settings)
+          .find(x => x.w.id === btn.dataset.bonus);
+        if(!b) return;
+        if(!confirm(`Pay ${b.w.name}'s season bonus?\n\n`
+          + `RM ${rm(b.tier.bonus)} for reaching the ${pts(b.tier.threshold)} pt tier.\n`
+          + `Season ${seasonLabel(settings)}.\n`
+          + `Their points balance is not affected.`)) return;
+        btn.disabled = true; btn.textContent = 'Paying…';
+        try{
+          await recordRedemption({
+            workerId:b.w.id, workerName:b.w.name, kind:'bonus', seasonKey:b.key,
+            label:'Season bonus — ' + pts(b.tier.threshold) + ' pt tier',
+            // The season window, not the payroll note box: a bonus belongs to
+            // its season and that has to survive in the ledger.
+            points:0, amount:Number(b.tier.bonus),
+            note:'Season ' + seasonLabel(settings) + ' · ' + pts(b.tier.threshold) + ' pt tier'
+          });
+          toast('Bonus paid — RM ' + rm(b.tier.bonus));
+          renderAdmin('redeem');
+        }catch(e){
+          console.error('bonus failed:', e);
+          btn.disabled = false; btn.textContent = 'Pay bonus';
+          toast(e.message || 'Could not pay — try again');
+        }
+      };
+    });
+
+    const lg = $('lg-worker');
+    if(lg) lg.onchange = () => { _ledger.worker = lg.value; _ledger.page = 0; renderAdmin('redeem'); };
+    const prev = $('lg-prev'), next = $('lg-next');
+    if(prev) prev.onclick = () => { if(_ledger.page > 0){ _ledger.page--; renderAdmin('redeem'); } };
+    if(next) next.onclick = () => { _ledger.page++; renderAdmin('redeem'); };
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
